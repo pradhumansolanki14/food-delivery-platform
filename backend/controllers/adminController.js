@@ -1,7 +1,9 @@
+import mongoose from "mongoose";
 import adminModel from "../models/adminModel.js";
 import restaurantModel from "../models/restaurantModel.js";
 import userModel from "../models/userModel.js";
 import orderModel from "../models/orderModel.js";
+import settingsModel from "../models/settingsModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
@@ -53,30 +55,46 @@ const registerSuperAdmin = async (req, res) => {
   }
 };
 
-// ─── Vendor self-registration ─────────────────────────────────
+// ─── Vendor self-registration (atomic transaction) ───────────
 const registerVendor = async (req, res) => {
   const { name, email, password, restaurantName, restaurantDescription, cuisine, address, phone } = req.body;
+
+  // ── Pre-transaction validation (fast checks before opening session) ──
   try {
-    // Check if vendor signup is open
+    // Check vendorSignupOpen from settings
+    const settings = await settingsModel.findOne({});
+    if (settings && settings.vendorSignupOpen === false) {
+      return res.status(403).json({ success: false, message: "Vendor registrations are currently closed" });
+    }
+
     const exists = await adminModel.findOne({ email });
     if (exists) return res.json({ success: false, message: "Email already registered" });
     if (!validator.isEmail(email)) return res.json({ success: false, message: "Invalid email" });
     if (password.length < 8) return res.json({ success: false, message: "Password must be at least 8 characters" });
     if (!restaurantName) return res.json({ success: false, message: "Restaurant name required" });
+  } catch (error) {
+    console.log(error);
+    return res.json({ success: false, message: "Error registering vendor" });
+  }
 
+  // ── Atomic transaction: create vendor + restaurant together ──
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);
 
-    // Create vendor account (pending approval)
-    const vendor = await adminModel.create({
+    // Step 1: Create vendor admin account (pending approval)
+    const vendorDocs = await adminModel.create([{
       name, email, password: hashed,
       role: "vendor",
       isApproved: false,
-      phone: phone || ""
-    });
+      phone: phone || "",
+    }], { session });
+    const vendor = vendorDocs[0];
 
-    // Create restaurant profile linked to vendor
-    const restaurant = await restaurantModel.create({
+    // Step 2: Create restaurant profile linked to vendor
+    const restaurantDocs = await restaurantModel.create([{
       ownerId: vendor._id,
       name: restaurantName,
       description: restaurantDescription || "",
@@ -85,19 +103,27 @@ const registerVendor = async (req, res) => {
       phone: phone || "",
       email,
       isApproved: false,
-    });
+    }], { session });
+    const restaurant = restaurantDocs[0];
 
-    // Link restaurant back to vendor
+    // Step 3: Link restaurant back to vendor (cross-reference)
     vendor.restaurantId = restaurant._id;
-    await vendor.save();
+    await vendor.save({ session });
+
+    // Step 4: Commit — both documents are now persisted
+    await session.commitTransaction();
 
     res.json({
       success: true,
       message: "Registration successful! Your account is pending approval by the platform admin. You will be notified once approved.",
     });
   } catch (error) {
-    console.log(error);
+    // Roll back all changes if any step fails
+    await session.abortTransaction();
+    console.log("Vendor registration transaction rolled back:", error);
     res.json({ success: false, message: "Error registering vendor" });
+  } finally {
+    session.endSession();
   }
 };
 
