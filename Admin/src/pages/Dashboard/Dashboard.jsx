@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { useAdmin } from '../../context/AdminContext'
 
 const StatCard = ({ icon, label, value, sub, color }) => (
   <div className={`bg-white rounded-3xl border border-slate-100 shadow-card p-5 animate-fadeUp`}>
@@ -24,18 +25,26 @@ const MiniBar = ({ value, max, color }) => (
 
 const Dashboard = ({ url }) => {
   const [stats, setStats] = useState(null)
+  const [platformStats, setPlatformStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const { adminRole } = useAdmin()
+  const token = localStorage.getItem("adminToken")
 
   useEffect(() => {
     fetchStats()
-  }, [])
+  }, [adminRole])
 
   const fetchStats = async () => {
     setLoading(true)
     try {
-      const res = await axios.get(url + '/api/order/stats')
+      const res = await axios.get(url + '/api/order/stats', { headers: { token } })
       if (res.data.success) setStats(res.data.data)
+      // For superadmin, also fetch platform-wide stats
+      if (adminRole === 'superadmin') {
+        const pRes = await axios.get(url + '/api/admin/platform-stats', { headers: { token } })
+        if (pRes.data.success) setPlatformStats(pRes.data.data)
+      }
     } catch (e) { console.log(e) }
     setLoading(false)
   }
@@ -81,11 +90,38 @@ const Dashboard = ({ url }) => {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon="📦" label="Total Orders" value={stats.totalOrders} sub="All time" color="bg-blue-50"/>
-        <StatCard icon="💰" label="Total Revenue" value={`$${stats.totalRevenue.toFixed(0)}`} sub="All time" color="bg-emerald-50"/>
-        <StatCard icon="👨‍🍳" label="Processing" value={stats.processing} sub="In kitchen" color="bg-amber-50"/>
-        <StatCard icon="✅" label="Delivered" value={stats.delivered} sub="Completed" color="bg-orange-50"/>
+        {adminRole === 'superadmin' && platformStats ? (
+          <>
+            <StatCard icon="🏪" label="Restaurants" value={platformStats.restaurants} sub="Approved" color="bg-blue-50"/>
+            <StatCard icon="👥" label="Customers" value={platformStats.totalUsers} sub="Registered" color="bg-purple-50"/>
+            <StatCard icon="📦" label="Total Orders" value={platformStats.totalOrders} sub="Platform-wide" color="bg-amber-50"/>
+            <StatCard icon="💰" label="Total Revenue" value={`$${(platformStats.totalRevenue || 0).toFixed(0)}`} sub="All time" color="bg-emerald-50"/>
+          </>
+        ) : (
+          <>
+            <StatCard icon="📦" label="Total Orders" value={stats.totalOrders} sub="All time" color="bg-blue-50"/>
+            <StatCard icon="💰" label="Total Revenue" value={`$${stats.totalRevenue.toFixed(0)}`} sub="All time" color="bg-emerald-50"/>
+            <StatCard icon="👨‍🍳" label="Processing" value={stats.processing} sub="In kitchen" color="bg-amber-50"/>
+            <StatCard icon="✅" label="Delivered" value={stats.delivered} sub="Completed" color="bg-orange-50"/>
+          </>
+        )}
       </div>
+
+      {/* Pending approvals (superadmin only) */}
+      {adminRole === 'superadmin' && platformStats?.pendingApprovals > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⏳</span>
+            <div>
+              <p className="font-bold text-amber-800">{platformStats.pendingApprovals} restaurant{platformStats.pendingApprovals !== 1 ? 's' : ''} pending approval</p>
+              <p className="text-xs text-amber-600">Review and approve restaurant applications</p>
+            </div>
+          </div>
+          <button onClick={() => navigate('/restaurants')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition-all">
+            Review →
+          </button>
+        </div>
+      )}
 
       {/* Revenue + Top Items */}
       <div className="grid md:grid-cols-2 gap-5">
@@ -190,9 +226,51 @@ const Dashboard = ({ url }) => {
         </div>
       </div>
 
+      {/* Per-restaurant breakdown (superadmin only) */}
+      {adminRole === 'superadmin' && platformStats?.restaurantBreakdown?.length > 0 && (
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-card overflow-hidden">
+          <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between">
+            <div>
+              <h3 className="font-display font-bold text-slate-900">Revenue by Restaurant</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Top performers</p>
+            </div>
+            <button onClick={() => navigate('/restaurants')} className="text-xs font-semibold text-orange-500 hover:underline">Manage →</button>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {platformStats.restaurantBreakdown.slice(0, 8).map((r, i) => {
+              const maxRev = platformStats.restaurantBreakdown[0]?.totalRevenue || 1;
+              return (
+                <div key={i} className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50 transition-colors">
+                  <span className="w-6 text-xs font-bold text-slate-400 text-center">{i+1}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{r.name}</p>
+                    <div className="h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                      <div className="h-full bg-orange-400 rounded-full transition-all duration-700" style={{ width: `${(r.totalRevenue / maxRev) * 100}%` }} />
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-slate-900">${r.totalRevenue.toFixed(0)}</p>
+                    <p className="text-xs text-slate-400">{r.orderCount} orders</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-4">
-        {[
+        {adminRole === 'superadmin' ? [
+          { label: 'Restaurants', icon: '🏪', color: 'bg-blue-500', action: () => navigate('/restaurants') },
+          { label: 'Categories', icon: '📂', color: 'bg-orange-500', action: () => navigate('/categories') },
+          { label: 'All Orders', icon: '📦', color: 'bg-emerald-500', action: () => navigate('/orders') },
+        ].map((a, i) => (
+          <button key={i} onClick={a.action} className={`${a.color} text-white rounded-2xl p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity shadow-sm`}>
+            <span className="text-2xl">{a.icon}</span>
+            <span className="text-xs font-bold">{a.label}</span>
+          </button>
+        )) : [
           { label: 'Add Dish', icon: '➕', color: 'bg-orange-500', action: () => navigate('/add') },
           { label: 'View Menu', icon: '🍽️', color: 'bg-blue-500', action: () => navigate('/list') },
           { label: 'All Orders', icon: '📦', color: 'bg-emerald-500', action: () => navigate('/orders') },
