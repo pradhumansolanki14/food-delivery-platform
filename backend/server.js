@@ -15,6 +15,7 @@ import categoryRouter from "./routes/categoryRoute.js";
 import cuisineRouter from "./routes/cuisineRoute.js";
 import bannerRouter from "./routes/bannerRoute.js";
 import restaurantRouter from "./routes/restaurantRoute.js";
+import settingsModel from "./models/settingsModel.js";
 import fs from "fs";
 
 // Validate required environment variables before anything else
@@ -35,10 +36,37 @@ app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
-// Maintenance mode middleware stub — will be fully wired to settingsModel in task 8
+// Maintenance mode middleware — blocks customer routes when enabled
 const maintenanceModeMiddleware = async (req, res, next) => {
-  next();
+  try {
+    // Always allow settings endpoint (so frontend can check maintenance status)
+    if (req.path === "/api/settings" || req.method === "GET" && req.path.startsWith("/api/settings")) {
+      return next();
+    }
+    
+    // Always allow admin routes (admins need to access dashboard to disable maintenance mode)
+    if (req.path.startsWith("/api/admin")) {
+      return next();
+    }
+    
+    // Check maintenance mode for customer-facing routes
+    const settings = await settingsModel.findOne({});
+    if (settings?.maintenanceMode === true) {
+      return res.status(503).json({ 
+        success: false, 
+        message: "Platform is under maintenance" 
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error("Maintenance mode check error:", error);
+    next(); // Fail open (allow request if check fails)
+  }
 };
+
+// Apply maintenance mode check to all routes
+app.use(maintenanceModeMiddleware);
 
 connectDB();
 

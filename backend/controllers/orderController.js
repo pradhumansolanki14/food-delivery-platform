@@ -1,6 +1,9 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import Stripe from "stripe";
+import couponModel from "../models/couponModel.js";
+import settingsModel from "../models/settingsModel.js";
+import restaurantModel from "../models/restaurantModel.js";
 
 // Lazily initialized so dotenv is loaded first
 let stripe;
@@ -13,7 +16,63 @@ const getStripe = () => {
 const placeOrder = async (req, res) => {
   const frontend_url = "http://localhost:5173";
   try {
+    // Check Stripe configuration
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(500).json({ success: false, message: "Payment processing is not configured" });
+    }
+
     const userId = req.userId;
+
+    // ── Coupon validation (must happen BEFORE order is created) ──
+    if (req.body.couponCode) {
+      const coupon = await couponModel.findOne({ code: req.body.couponCode.toUpperCase() });
+
+      // Check 1: Coupon exists
+      if (!coupon) {
+        return res.status(400).json({ success: false, message: "Invalid coupon code" });
+      }
+
+      // Check 2: isActive
+      if (!coupon.isActive) {
+        return res.status(400).json({ success: false, message: "This coupon is inactive" });
+      }
+
+      // Check 3: expiresAt
+      if (new Date() > coupon.expiresAt) {
+        return res.status(400).json({ success: false, message: "Coupon has expired" });
+      }
+
+      // Check 4: usedCount < maxUses
+      if (coupon.usedCount >= coupon.maxUses) {
+        return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
+      }
+
+      // Check 5: minOrder
+      if (req.body.amount < coupon.minOrder) {
+        return res.status(400).json({ success: false, message: "Order total below coupon minimum" });
+      }
+
+      // Check 6: restaurant scope match
+      if (coupon.restaurantId && req.body.restaurantId) {
+        if (coupon.restaurantId.toString() !== req.body.restaurantId.toString()) {
+          return res.status(400).json({ success: false, message: "Coupon not valid for this restaurant" });
+        }
+      }
+
+      // Calculate discount
+      const discountAmount = coupon.discountType === "percent"
+        ? (req.body.amount * coupon.discount) / 100
+        : Math.min(coupon.discount, req.body.amount);
+
+      // Store for order creation
+      req.body.couponId = coupon._id;
+      req.body.discountAmount = discountAmount;
+
+      // Atomically increment usedCount
+      await couponModel.findByIdAndUpdate(coupon._id, { $inc: { usedCount: 1 } });
+    }
+
+    // ── Create order document ──────────────────────────────────
     const newOrder = new orderModel({
       userId,
       restaurantId: req.body.restaurantId || null,
@@ -22,22 +81,37 @@ const placeOrder = async (req, res) => {
       address: req.body.address,
       payment: false,
       status: "Food Processing",
+      couponId: req.body.couponId || null,
+      discountAmount: req.body.discountAmount || 0,
     });
     await newOrder.save();
 
+    // ── Fetch settings (currency, deliveryFee) ─────────────────
+    const settings = await settingsModel.findOne({});
+    const currency = settings?.currency || "USD";
+
+    let deliveryFee = settings?.deliveryFee ?? 2;
+    if (req.body.restaurantId) {
+      const restaurant = await restaurantModel.findById(req.body.restaurantId);
+      if (restaurant?.deliveryFee !== undefined) {
+        deliveryFee = restaurant.deliveryFee;
+      }
+    }
+
+    // ── Build Stripe line items ────────────────────────────────
     const line_items = req.body.items.map((item) => ({
       price_data: {
-        currency: "inr",
+        currency: currency.toLowerCase(),
         product_data: { name: item.name },
-        unit_amount: Math.round(item.price * 100 * 80),
+        unit_amount: Math.round(item.price * 100),
       },
       quantity: item.quantity,
     }));
     line_items.push({
       price_data: {
-        currency: "inr",
+        currency: currency.toLowerCase(),
         product_data: { name: "Delivery Charges" },
-        unit_amount: 2 * 100 * 80,
+        unit_amount: Math.round(deliveryFee * 100),
       },
       quantity: 1,
     });

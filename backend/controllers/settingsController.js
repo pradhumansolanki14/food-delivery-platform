@@ -5,7 +5,14 @@ const getSettings = async (req, res) => {
   try {
     let settings = await settingsModel.findOne({});
     if (!settings) settings = await settingsModel.create({});
-    res.json({ success: true, data: settings });
+    
+    const publicSettings = {
+      platformName: settings.platformName,
+      currency: settings.currency,
+      supportEmail: settings.supportEmail,
+      maintenanceMode: settings.maintenanceMode,
+    };
+    res.json({ success: true, data: publicSettings });
   } catch (error) {
     res.json({ success: false, message: "Error" });
   }
