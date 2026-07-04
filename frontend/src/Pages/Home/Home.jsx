@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { StoreContext } from '../../context/StoreContext'
 import { menu_list } from '../../assets/assets'
 import FoodItem from '../../components/FoodItem/FoodItem'
+import BannerCarousel from '../../components/BannerCarousel/BannerCarousel'
 
 /* ─── Hero ─────────────────────────────────────────────── */
 const Hero = ({ setShowLogin }) => {
@@ -273,6 +274,7 @@ const AppCTA = () => {
 const Home = ({ setShowLogin }) => {
   return (
     <div className="bg-white">
+      <BannerCarousel />
       <Hero setShowLogin={setShowLogin} />
       <CategoriesSection />
       <FeaturedSection />
