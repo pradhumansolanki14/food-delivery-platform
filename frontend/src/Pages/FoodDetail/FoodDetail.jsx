@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { StoreContext } from '../../context/StoreContext'
+import { FiStar, FiTrash2, FiMessageSquare, FiCornerDownRight, FiEdit3 } from 'react-icons/fi'
+import { Button, Input, Textarea, Badge } from '../../components/ui'
 
 // ─── Reviews Section ─────────────────────────────────────────
 const ReviewsSection = ({ foodId, url, token }) => {
@@ -16,11 +18,17 @@ const ReviewsSection = ({ foodId, url, token }) => {
   const fetchReviews = async () => {
     try {
       const res = await axios.get(`${url}/api/reviews/${foodId}`)
-      if (res.data.success) { setReviews(res.data.data); setAverage(res.data.average); setCount(res.data.count) }
+      if (res.data.success) { 
+        setReviews(res.data.data)
+        setAverage(res.data.average)
+        setCount(res.data.count) 
+      }
     } catch {}
   }
 
-  useEffect(() => { fetchReviews() }, [foodId])
+  useEffect(() => { 
+    fetchReviews() 
+  }, [foodId])
 
   const submitReview = async (e) => {
     e.preventDefault()
@@ -28,9 +36,16 @@ const ReviewsSection = ({ foodId, url, token }) => {
     setSubmitting(true); setMsg('')
     try {
       const res = await axios.post(`${url}/api/reviews`, { foodId, ...form }, { headers: { token } })
-      if (res.data.success) { setMsg('✅ Review submitted!'); setShowForm(false); fetchReviews() }
-      else setMsg(res.data.message)
-    } catch { setMsg('Failed to submit') }
+      if (res.data.success) { 
+        setMsg('✅ Review submitted!')
+        setShowForm(false)
+        fetchReviews() 
+      } else {
+        setMsg(res.data.message)
+      }
+    } catch { 
+      setMsg('Failed to submit') 
+    }
     setSubmitting(false)
   }
 
@@ -42,103 +57,170 @@ const ReviewsSection = ({ foodId, url, token }) => {
   }
 
   return (
-    <div className="bg-white rounded-4xl border border-slate-100 shadow-card p-6 sm:p-8 animate-fadeUp">
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-card p-6 sm:p-8 animate-fadeUp">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-display text-2xl font-bold text-slate-900">Reviews</h2>
-          <div className="flex items-center gap-2 mt-1">
+          <h2 className="font-poppins text-2xl font-bold text-slate-900">Customer Reviews</h2>
+          <div className="flex items-center gap-2 mt-1 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl w-fit">
             <div className="flex gap-0.5">
-              {[1,2,3,4,5].map(s => (
-                <svg key={s} className={`w-4 h-4 ${s <= Math.round(average) ? 'text-amber-400' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                </svg>
+              {[1, 2, 3, 4, 5].map(s => (
+                <FiStar 
+                  key={s} 
+                  size={14} 
+                  className={s <= Math.round(average) ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} 
+                />
               ))}
             </div>
-            <span className="text-sm font-bold text-slate-900">{average || '—'}</span>
-            <span className="text-xs text-slate-400">({count} review{count !== 1 ? 's' : ''})</span>
+            <span className="text-xs font-bold text-slate-800">{average || '0.0'}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">({count} review{count !== 1 ? 's' : ''})</span>
           </div>
         </div>
         {token && (
-          <button onClick={() => setShowForm(f => !f)}
-            className="flex items-center gap-2 px-4 py-2.5 btn-primary text-white font-semibold rounded-xl shadow-orange text-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          <Button 
+            onClick={() => setShowForm(f => !f)}
+            variant="primary"
+            size="sm"
+            leftIcon={<FiEdit3 size={14} />}
+            className="font-bold shadow-emerald-lg"
+          >
             Write Review
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Review form */}
       {showForm && (
-        <form onSubmit={submitReview} className="mb-6 p-5 bg-orange-50 border border-orange-100 rounded-2xl space-y-4 animate-fadeUp">
+        <form onSubmit={submitReview} className="mb-6 p-6 bg-slate-50 border border-slate-100 rounded-3xl space-y-4 animate-scaleIn">
           <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Your Rating</label>
-            <div className="flex gap-2">
-              {[1,2,3,4,5].map(s => (
-                <button key={s} type="button" onClick={() => setForm(f => ({...f, rating: s}))}
-                  className={`w-10 h-10 rounded-xl text-xl transition-all ${form.rating >= s ? 'bg-amber-400 scale-110' : 'bg-white border border-slate-200 hover:bg-amber-50'}`}>
-                  ⭐
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">Your Rating</label>
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3, 4, 5].map(s => (
+                <button 
+                  key={s} 
+                  type="button" 
+                  onClick={() => setForm(f => ({ ...f, rating: s }))}
+                  className={`p-1 transition-transform duration-150 hover:scale-110 ${
+                    form.rating >= s ? 'text-amber-400' : 'text-slate-200'
+                  }`}
+                  aria-label={`Rate ${s} stars`}
+                >
+                  <FiStar size={24} className={form.rating >= s ? 'fill-current' : ''} />
                 </button>
               ))}
-              <span className="self-center text-sm font-semibold text-slate-600">{form.rating}/5</span>
+              <span className="ml-3 text-xs font-extrabold text-slate-655">{form.rating}/5 Rating</span>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Your Review</label>
-            <textarea value={form.comment} onChange={e => setForm(f => ({...f, comment: e.target.value}))} required rows={3}
-              placeholder="Share your experience with this dish..."
-              className="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 bg-white text-sm focus:outline-none focus:border-orange-300 transition-all resize-none" />
-          </div>
-          {msg && <p className={`text-xs font-medium ${msg.startsWith('✅') ? 'text-emerald-600' : 'text-red-500'}`}>{msg}</p>}
+          
+          <Textarea 
+            label="Your Comment"
+            value={form.comment} 
+            onChange={e => setForm(f => ({ ...f, comment: e.target.value }))} 
+            required 
+            rows={3}
+            placeholder="Share your experience with this dish..." 
+          />
+
+          {msg && (
+            <p className={`text-xs font-semibold ${msg.startsWith('✅') ? 'text-emerald-600' : 'text-rose-500'}`}>
+              {msg}
+            </p>
+          )}
+
           <div className="flex gap-3">
-            <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl text-sm">Cancel</button>
-            <button type="submit" disabled={submitting} className="flex-1 py-2.5 btn-primary text-white font-bold rounded-xl text-sm disabled:opacity-60">
+            <Button type="button" onClick={() => setShowForm(false)} variant="outline" size="sm" className="flex-1 font-bold">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={submitting} variant="primary" size="sm" className="flex-1 font-bold shadow-emerald-lg">
               {submitting ? 'Submitting...' : 'Submit Review'}
-            </button>
+            </Button>
           </div>
         </form>
       )}
 
-      {!token && <p className="text-sm text-slate-400 mb-4 italic">Sign in to leave a review.</p>}
-      {msg && !showForm && <p className={`text-xs font-medium mb-4 ${msg.startsWith('✅') ? 'text-emerald-600' : 'text-red-500'}`}>{msg}</p>}
+      {!token && <p className="text-xs font-semibold text-slate-400 mb-6 italic">Sign in to leave a review.</p>}
+      {msg && !showForm && (
+        <p className={`text-xs font-semibold mb-6 ${msg.startsWith('✅') ? 'text-emerald-600' : 'text-rose-500'}`}>
+          {msg}
+        </p>
+      )}
 
       {/* Reviews list */}
       {reviews.length === 0 ? (
-        <div className="text-center py-10 text-slate-400">
-          <div className="text-4xl mb-3">💬</div>
-          <p className="font-medium text-slate-600">No reviews yet</p>
-          <p className="text-sm">Be the first to share your experience!</p>
+        <div className="text-center py-12 text-slate-400 bg-slate-50 border border-slate-100 rounded-3xl p-6">
+          <FiMessageSquare className="mx-auto text-slate-300 mb-4" size={32} />
+          <p className="font-bold text-slate-700 text-sm mb-1">No reviews yet</p>
+          <p className="text-xs text-slate-400">Be the first to share your experience!</p>
         </div>
       ) : (
         <div className="space-y-4">
           {reviews.map((r, i) => (
-            <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 group">
+            <div key={i} className="p-5 bg-white border border-slate-100/80 rounded-2xl shadow-sm hover:shadow-card transition-all duration-300 group">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+                  {/* Initials Avatar fallback */}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-extrabold text-xs shadow-sm">
                     {r.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900 text-sm">{r.name}</p>
-                    <p className="text-xs text-slate-400">{new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    <p className="font-poppins font-bold text-slate-900 text-sm">{r.name}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      {new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
                   </div>
                 </div>
+                
                 <div className="flex items-center gap-2">
                   <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map(s => (
-                      <svg key={s} className={`w-3.5 h-3.5 ${s <= r.rating ? 'text-amber-400' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <FiStar 
+                        key={s} 
+                        size={12} 
+                        className={s <= r.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} 
+                      />
                     ))}
                   </div>
+                  
                   {token && (
-                    <button onClick={() => deleteReview(r._id)} className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all ml-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <button 
+                      onClick={() => deleteReview(r._id)} 
+                      className="opacity-0 group-hover:opacity-100 text-slate-350 hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg transition-all ml-1"
+                      aria-label="Delete review"
+                    >
+                      <FiTrash2 size={14} />
                     </button>
                   )}
                 </div>
               </div>
-              <p className="text-sm text-slate-600 leading-relaxed">{r.comment}</p>
+
+              <p className="text-xs font-medium text-slate-600 leading-relaxed pl-13">
+                {r.comment}
+              </p>
+
+              {/* Vendor Reply UI Box */}
+              {r.vendorReply && (
+                <div className="mt-4 ml-13 p-4 bg-emerald-50/75 border border-emerald-100/50 rounded-2xl flex gap-3 text-emerald-800 animate-slideRight">
+                  <span className="mt-0.5 flex-shrink-0 text-emerald-600">
+                    <FiCornerDownRight size={16} />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
+                        Vendor Reply
+                      </span>
+                      {r.vendorRepliedAt && (
+                        <span className="text-[9px] text-emerald-600/70 font-semibold uppercase tracking-wider">
+                          {new Date(r.vendorRepliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-semibold text-emerald-800/90 leading-relaxed">
+                      {r.vendorReply}
+                    </p>
+                  </div>
+                </div>
+              )}
+
             </div>
           ))}
         </div>

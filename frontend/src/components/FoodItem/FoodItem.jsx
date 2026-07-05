@@ -1,30 +1,35 @@
-import React, { useContext, useState } from 'react'
-import { StoreContext } from '../../context/StoreContext'
-import { useNavigate } from 'react-router-dom'
+import React, { useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiHeart, FiPlus, FiMinus, FiStar } from 'react-icons/fi';
+import { StoreContext } from '../../context/StoreContext';
+import { Card, Button, Badge } from '../ui';
 
 const FoodItem = ({ id, name, price, description, image }) => {
-  const { cartItems, addToCart, removeFromCart, url, toggleFavorite, isFavorite, token } = useContext(StoreContext)
-  const [imgLoaded, setImgLoaded] = useState(false)
-  const [favAnimating, setFavAnimating] = useState(false)
-  const navigate = useNavigate()
-  const qty = cartItems[id] || 0
-  const fav = isFavorite(id)
+  const { cartItems, addToCart, removeFromCart, url, toggleFavorite, isFavorite, token } = useContext(StoreContext);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [favAnimating, setFavAnimating] = useState(false);
+  const navigate = useNavigate();
+  const qty = cartItems[id] || 0;
+  const fav = isFavorite(id);
 
   const handleFav = async (e) => {
-    e.stopPropagation()
-    if (!token) { return } // could trigger login popup — left to parent
-    setFavAnimating(true)
-    await toggleFavorite(id)
-    setTimeout(() => setFavAnimating(false), 400)
-  }
+    e.stopPropagation();
+    if (!token) return; // parent component handles login triggers
+    setFavAnimating(true);
+    await toggleFavorite(id);
+    setTimeout(() => setFavAnimating(false), 400);
+  };
 
   return (
-    <div
-      className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-card card-hover cursor-pointer animate-fadeUp"
+    <Card
+      variant="default"
+      padding="none"
+      radius="2xl"
       onClick={() => navigate(`/food/${id}`)}
+      className="group relative flex flex-col h-full overflow-hidden border border-slate-100/80 shadow-card hover:shadow-card-hover cursor-pointer transition-all duration-300"
     >
-      {/* Image */}
-      <div className="relative overflow-hidden bg-slate-100" style={{ paddingBottom: '68%' }}>
+      {/* ── Image Cover Section ── */}
+      <div className="relative overflow-hidden bg-slate-50" style={{ paddingBottom: '72%' }}>
         {!imgLoaded && (
           <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse" />
         )}
@@ -32,94 +37,98 @@ const FoodItem = ({ id, name, price, description, image }) => {
           src={url + "/images/" + image}
           alt={name}
           onLoad={() => setImgLoaded(true)}
-          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${
+            imgLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
         />
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Gradient dark bottom overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Top badges */}
-        <div className="absolute top-3 left-3">
-          <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-slate-700 rounded-lg shadow-sm">⭐ 4.8</span>
+        {/* Rating chip */}
+        <div className="absolute top-3.5 left-3.5">
+          <Badge variant="white" size="sm" rounded="md" className="backdrop-blur-sm shadow-sm bg-white/90 border border-slate-100">
+            <FiStar className="text-amber-400 fill-amber-400" size={12} />
+            <span className="text-[10px] font-bold text-slate-700">4.8</span>
+          </Badge>
         </div>
 
-        {/* Favorite heart */}
+        {/* Favorite toggle heart button */}
         <button
+          type="button"
           onClick={handleFav}
-          className={`absolute top-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 z-10 ${
-            fav ? 'bg-red-500 shadow-lg scale-110' : 'bg-white/90 backdrop-blur-sm opacity-0 group-hover:opacity-100'
+          className={`absolute top-3.5 right-3.5 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 z-10 ${
+            fav 
+              ? 'bg-rose-500 shadow-md scale-110' 
+              : 'bg-white/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 shadow-sm border border-slate-100'
           } ${favAnimating ? 'scale-125' : ''}`}
           aria-label={fav ? "Remove from favorites" : "Add to favorites"}
         >
-          <svg className={`w-4 h-4 transition-colors ${fav ? 'text-white' : 'text-slate-500'}`} fill={fav ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
+          <FiHeart 
+            size={14} 
+            className={`transition-colors ${fav ? 'text-white fill-white' : 'text-slate-500'}`} 
+          />
         </button>
 
-        {/* Delivery time */}
-        <div className="absolute bottom-10 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-          <span className="flex items-center gap-1 px-2.5 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-slate-700 rounded-lg shadow-sm">
-            <svg className="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            25 min
-          </span>
-        </div>
-
-        {/* Cart controls */}
-        <div className="absolute bottom-3 right-3" onClick={e => e.stopPropagation()}>
+        {/* Add to Cart button (quick action when qty is 0) */}
+        <div className="absolute bottom-3.5 right-3.5" onClick={e => e.stopPropagation()}>
           {qty === 0 ? (
             <button
               onClick={() => addToCart(id)}
-              className="w-10 h-10 btn-primary text-white rounded-2xl flex items-center justify-center shadow-orange opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 hover:scale-110"
+              className="w-9 h-9 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-xl flex items-center justify-center shadow-emerald opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0 hover:scale-105"
               aria-label={`Add ${name} to cart`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
+              <FiPlus size={18} strokeWidth={2.5} />
             </button>
           ) : (
-            <div className="flex items-center gap-1.5 bg-white rounded-2xl p-1 shadow-card border border-slate-100">
-              <button onClick={() => removeFromCart(id)} className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-red-100 flex items-center justify-center transition-colors">
-                <svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
-                </svg>
+            <div className="flex items-center gap-2.5 bg-white border border-slate-100 rounded-xl p-1 shadow-card">
+              <button 
+                onClick={() => removeFromCart(id)} 
+                className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-colors"
+                aria-label="Decrease quantity"
+              >
+                <FiMinus size={12} strokeWidth={2.5} />
               </button>
-              <span className="w-6 text-center text-sm font-bold text-slate-900">{qty}</span>
-              <button onClick={() => addToCart(id)} className="w-7 h-7 rounded-xl bg-orange-500 hover:bg-orange-600 flex items-center justify-center transition-colors">
-                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                </svg>
+              <span className="w-5 text-center text-xs font-bold text-slate-800">{qty}</span>
+              <button 
+                onClick={() => addToCart(id)} 
+                className="w-7 h-7 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-colors"
+                aria-label="Increase quantity"
+              >
+                <FiPlus size={12} strokeWidth={2.5} />
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Info */}
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-1.5">
-          <h3 className="font-display font-bold text-slate-900 text-base leading-tight line-clamp-1 group-hover:text-orange-500 transition-colors">{name}</h3>
-          <div className="flex-shrink-0 flex items-center gap-0.5">
-            <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="text-xs font-semibold text-slate-500">4.8</span>
+      {/* ── Content details ── */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-1.5">
+            <h3 className="font-poppins font-bold text-slate-900 text-sm leading-tight line-clamp-1 group-hover:text-emerald-600 transition-colors">
+              {name}
+            </h3>
           </div>
+          <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-4">
+            {description}
+          </p>
         </div>
-        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-3">{description}</p>
-        <div className="flex items-center justify-between">
+
+        <div className="flex items-center justify-between border-t border-slate-50/50 pt-3">
           <div>
-            <span className="text-xl font-display font-bold text-slate-900">${price}</span>
-            <span className="text-xs text-slate-400 ml-1">/ serving</span>
+            <span className="text-lg font-poppins font-bold text-slate-900">${price}</span>
+            <span className="text-[10px] text-slate-400 font-semibold ml-1">/ serving</span>
           </div>
           {qty > 0 && (
-            <span className="text-xs font-semibold text-orange-500 bg-orange-50 px-2.5 py-1 rounded-lg">{qty} in cart</span>
+            <Badge variant="primary" size="sm" rounded="md" className="font-bold">
+              {qty} added
+            </Badge>
           )}
         </div>
       </div>
-    </div>
-  )
-}
+    </Card>
+  );
+};
 
-export default FoodItem
+export default FoodItem;

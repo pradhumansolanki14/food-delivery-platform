@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiSliders, FiX, FiInfo } from 'react-icons/fi';
 import { StoreContext } from '../../context/StoreContext';
 import RestaurantCard from '../../components/RestaurantCard/RestaurantCard';
-
-const SkeletonCard = () => (
-  <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden animate-pulse">
-    <div className="h-44 bg-slate-100" />
-    <div className="p-4 space-y-2">
-      <div className="h-4 bg-slate-100 rounded-xl w-3/4" />
-      <div className="h-3 bg-slate-50 rounded-xl w-1/2" />
-      <div className="h-3 bg-slate-50 rounded-xl w-2/3" />
-    </div>
-  </div>
-);
+import { Container, SearchInput, Skeleton, Button } from '../../components/ui';
 
 const RestaurantsPage = () => {
   const { url } = useContext(StoreContext);
@@ -27,7 +19,9 @@ const RestaurantsPage = () => {
     try {
       const params = cuisineId ? `?cuisineId=${cuisineId}` : '';
       const res = await axios.get(`${url}/api/food/restaurants${params}`);
-      if (res.data.success) setRestaurants(res.data.data);
+      if (res.data.success) {
+        setRestaurants(res.data.data);
+      }
     } catch {
       setRestaurants([]);
     }
@@ -61,102 +55,140 @@ const RestaurantsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Page header */}
+      
+      {/* ── Page Header ── */}
       <div className="bg-white border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <Container className="py-12">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h1 className="font-bold text-3xl sm:text-4xl text-slate-900 mb-1">Restaurants</h1>
-              <p className="text-slate-400 text-sm">
-                {loading ? 'Loading...' : `${filtered.length} restaurant${filtered.length !== 1 ? 's' : ''} available`}
+              <h1 className="font-poppins font-extrabold text-3xl sm:text-4xl text-slate-900 tracking-tight mb-2">
+                All Restaurants
+              </h1>
+              <p className="text-slate-400 text-sm font-semibold">
+                {loading ? 'Searching kitchens...' : `${filtered.length} culinary kitchen${filtered.length !== 1 ? 's' : ''} available`}
               </p>
             </div>
-            {/* Search */}
-            <div className="flex items-center gap-2 bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-2.5 w-full sm:w-72 focus-within:border-orange-300 transition-colors">
-              <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search restaurants..."
+            
+            {/* Search Input Box */}
+            <div className="w-full md:w-80">
+              <SearchInput
+                placeholder="Search restaurants or cuisines..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none"
+                onClear={() => setSearch('')}
               />
-              {search && (
-                <button onClick={() => setSearch('')} className="text-slate-300 hover:text-slate-500">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
             </div>
           </div>
-        </div>
+        </Container>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Cuisine filter bar */}
+      {/* ── Main Content Area ── */}
+      <Container className="py-8">
+        
+        {/* Cuisine Filter Scroll Strip */}
         {cuisines.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-3 mb-8 scrollbar-hide">
             <button
               onClick={() => handleCuisineChange('')}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${
+              className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                 !selectedCuisine
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-white border border-slate-200 text-slate-500 hover:border-orange-200 hover:text-orange-500'
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-white border border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
               }`}
             >
+              <FiSliders className="text-sm" />
               All Cuisines
             </button>
             {cuisines.map(c => (
               <button
                 key={c._id}
                 onClick={() => handleCuisineChange(c._id)}
-                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${
+                className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                   selectedCuisine === c._id
-                    ? 'bg-orange-500 text-white shadow-sm'
-                    : 'bg-white border border-slate-200 text-slate-500 hover:border-orange-200 hover:text-orange-500'
+                    ? 'bg-emerald-500 text-white shadow-emerald'
+                    : 'bg-white border border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
                 }`}
               >
-                {c.icon && <span>{c.icon}</span>}
-                {c.name}
+                {c.icon && <span className="text-sm">{c.icon}</span>}
+                <span>{c.name}</span>
               </button>
             ))}
           </div>
         )}
 
-        {/* Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {[1,2,3,4,5,6,7,8].map(i => <SkeletonCard key={i} />)}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <span className="text-6xl mb-4">🏪</span>
-            <h3 className="font-bold text-xl text-slate-900 mb-2">
-              {search ? 'No restaurants match your search' : 'No restaurants available'}
-            </h3>
-            <p className="text-slate-400 text-sm">
-              {search ? 'Try a different search term' : 'Check back later for new restaurants'}
-            </p>
-            {(search || selectedCuisine) && (
-              <button
-                onClick={() => { setSearch(''); handleCuisineChange(''); }}
-                className="mt-4 px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl text-sm transition-all"
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map(r => (
-              <RestaurantCard key={r._id} restaurant={r} url={url} />
-            ))}
-          </div>
-        )}
-      </div>
+        {/* ── Restaurant Grid ── */}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                <div key={i} className="bg-white rounded-3xl border border-slate-100 overflow-hidden p-4 space-y-4 shadow-sm">
+                  <Skeleton variant="card" />
+                  <Skeleton variant="title" className="w-2/3" />
+                  <Skeleton variant="text" className="w-1/2" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton variant="text" className="w-1/3" />
+                    <Skeleton variant="text" className="w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          ) : filtered.length === 0 ? (
+            <motion.div 
+              key="empty"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="flex flex-col items-center justify-center py-20 text-center max-w-sm mx-auto bg-white border border-slate-100/80 rounded-3xl shadow-card p-8"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-5">
+                <FiInfo size={28} />
+              </div>
+              <h3 className="font-poppins font-bold text-slate-800 text-lg mb-2">
+                {search ? 'No Match Found' : 'No Kitchens Online'}
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                {search ? 'Try checking your spelling or search for another keyword.' : 'Check back later for active culinary kitchens.'}
+              </p>
+              {(search || selectedCuisine) && (
+                <Button
+                  onClick={() => { setSearch(''); handleCuisineChange(''); }}
+                  variant="primary"
+                  size="md"
+                  className="font-bold shadow-emerald-lg"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="grid"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              {filtered.map((r, idx) => (
+                <motion.div
+                  key={r._id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                >
+                  <RestaurantCard restaurant={r} url={url} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </Container>
     </div>
   );
 };

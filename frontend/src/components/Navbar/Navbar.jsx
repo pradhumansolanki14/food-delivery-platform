@@ -1,7 +1,9 @@
 import React, { useContext, useState, useEffect } from "react";
-import { assets } from "../../assets/assets";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiSearch, FiShoppingBag, FiHeart, FiUser, FiMenu, FiX, FiLogOut } from "react-icons/fi";
 import { StoreContext } from "../../context/StoreContext";
+import { Button } from "../ui";
 
 const NAV_ITEMS = [
   { label: "Home",    path: "/",        exact: true },
@@ -13,6 +15,7 @@ const NAV_ITEMS = [
 const Navbar = ({ setShowLogin }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const { token, setToken, cartItems, favorites } = useContext(StoreContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,12 +26,13 @@ const Navbar = ({ setShowLogin }) => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // Close mobile drawer on route change
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
   const logout = () => {
     localStorage.removeItem("token");
     setToken("");
+    setShowProfileMenu(false);
     navigate("/");
   };
 
@@ -40,34 +44,38 @@ const Navbar = ({ setShowLogin }) => {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-black/5 border-b border-orange-50" : "bg-white/80 backdrop-blur-md"
-      }`}>
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled 
+            ? "bg-white/80 backdrop-blur-md shadow-card border-b border-slate-100" 
+            : "bg-white/40 backdrop-blur-sm"
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18 py-3.5">
+          <div className="flex items-center justify-between h-20">
 
             {/* ── Logo ── */}
             <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-orange">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-emerald transition-all duration-300 group-hover:scale-105">
                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
               </div>
-              <span className="font-display font-bold text-xl text-slate-900 tracking-tight group-hover:text-orange-500 transition-colors">
+              <span className="font-poppins font-bold text-xl text-slate-900 tracking-tight group-hover:text-emerald-500 transition-colors">
                 Tomato
               </span>
             </Link>
 
-            {/* ── Desktop Nav ── */}
-            <div className="hidden md:flex items-center bg-slate-50 rounded-2xl p-1 gap-0.5">
+            {/* ── Desktop Nav Links ── */}
+            <div className="hidden md:flex items-center bg-slate-50 border border-slate-100 rounded-2xl p-1 gap-1">
               {NAV_ITEMS.map(item => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  className={`relative px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
                     isActive(item.path, item.exact)
-                      ? "bg-white text-orange-500 shadow-sm font-semibold"
-                      : "text-slate-500 hover:text-slate-900"
+                      ? "bg-white text-emerald-600 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
                   }`}
                 >
                   {item.label}
@@ -76,31 +84,27 @@ const Navbar = ({ setShowLogin }) => {
             </div>
 
             {/* ── Right Actions ── */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
 
-              {/* Search */}
+              {/* Search Toggle */}
               <button
                 onClick={() => navigate("/search")}
-                className="hidden md:flex w-9 h-9 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200"
+                className="w-10 h-10 flex items-center justify-center rounded-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all duration-200"
                 aria-label="Search"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+                <FiSearch size={20} />
               </button>
 
               {/* Favorites — only when logged in */}
               {token && (
                 <button
                   onClick={() => navigate("/favorites")}
-                  className="hidden md:flex relative w-9 h-9 items-center justify-center rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all duration-200"
+                  className="relative w-10 h-10 flex items-center justify-center rounded-2xl text-slate-500 hover:bg-rose-50 hover:text-rose-500 transition-all duration-200"
                   aria-label="Favorites"
                 >
-                  <svg className="w-5 h-5" fill={favCount > 0 ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                  </svg>
+                  <FiHeart size={20} className={favCount > 0 ? "fill-rose-500 text-rose-500" : ""} />
                   {favCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                       {favCount > 9 ? '9+' : favCount}
                     </span>
                   )}
@@ -110,138 +114,203 @@ const Navbar = ({ setShowLogin }) => {
               {/* Cart */}
               <Link
                 to="/cart"
-                className="relative flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-600 transition-all duration-200"
+                className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all duration-200"
                 aria-label="Cart"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
-                <span className="hidden sm:block text-sm font-semibold">Cart</span>
+                <FiShoppingBag size={18} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-orange">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-emerald">
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
               </Link>
 
-              {/* Auth */}
+              {/* Auth / Account Menu */}
               {!token ? (
-                <button
+                <Button
                   onClick={() => setShowLogin(true)}
-                  className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:shadow-lg"
+                  variant="primary"
+                  size="sm"
+                  className="hidden md:flex font-semibold shadow-emerald-lg"
                 >
                   Sign in
-                </button>
+                </Button>
               ) : (
-                <div className="relative group hidden md:block">
-                  <button className="flex items-center gap-2 w-10 h-10 rounded-xl overflow-hidden ring-2 ring-orange-100 hover:ring-orange-300 transition-all duration-200" aria-label="Profile">
-                    <img src={assets.profile_icon} alt="Profile" className="w-full h-full object-cover"/>
-                  </button>
-                  {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-black/10 border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 pointer-events-none group-hover:pointer-events-auto">
-                    <div className="p-2">
-                      <div className="px-3 py-2 mb-1 border-b border-slate-50">
-                        <p className="text-xs text-slate-400 font-medium">Signed in</p>
-                      </div>
-
-                      {[
-                        { label: "My Profile",    path: "/profile",   icon: "👤", color: "hover:bg-slate-50 hover:text-slate-900" },
-                        { label: "My Orders",     path: "/myorders",  icon: "📦", color: "hover:bg-orange-50 hover:text-orange-600" },
-                        { label: "My Favorites",  path: "/favorites", icon: "❤️", color: "hover:bg-red-50 hover:text-red-600" },
-                        { label: "Search",        path: "/search",    icon: "🔍", color: "hover:bg-slate-50 hover:text-slate-900" },
-                      ].map(item => (
-                        <button
-                          key={item.path}
-                          onClick={() => navigate(item.path)}
-                          className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm text-slate-700 ${item.color} rounded-xl transition-all duration-150`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="font-medium">{item.label}</span>
-                        </button>
-                      ))}
-
-                      <hr className="my-1.5 border-slate-100"/>
-
-                      <button
-                        onClick={logout}
-                        className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-all duration-150"
-                      >
-                        <span>🚪</span>
-                        <span className="font-medium">Sign Out</span>
-                      </button>
+                <div 
+                  className="relative hidden md:block"
+                  onMouseEnter={() => setShowProfileMenu(true)}
+                  onMouseLeave={() => setShowProfileMenu(false)}
+                >
+                  <button 
+                    className="flex items-center justify-center w-10 h-10 rounded-2xl overflow-hidden ring-2 ring-emerald-100 hover:ring-emerald-300 transition-all duration-200" 
+                    aria-label="Profile"
+                  >
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                      <FiUser size={18} />
                     </div>
-                  </div>
+                  </button>
+
+                  {/* Custom animated dropdown */}
+                  <AnimatePresence>
+                    {showProfileMenu && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-dropdown border border-slate-100 p-2 z-50"
+                      >
+                        <div className="px-3 py-2.5 mb-1 border-b border-slate-50">
+                          <p className="text-2xs text-slate-400 font-bold uppercase tracking-wider">Account</p>
+                        </div>
+
+                        {[
+                          { label: "My Profile",    path: "/profile",   icon: <FiUser size={16} />, color: "hover:bg-slate-50 hover:text-slate-900" },
+                          { label: "My Orders",     path: "/myorders",  icon: <FiShoppingBag size={16} />, color: "hover:bg-emerald-50 hover:text-emerald-600" },
+                          { label: "My Favorites",  path: "/favorites", icon: <FiHeart size={16} />, color: "hover:bg-rose-50 hover:text-rose-600" },
+                        ].map(item => (
+                          <button
+                            key={item.path}
+                            onClick={() => { navigate(item.path); setShowProfileMenu(false); }}
+                            className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm text-slate-650 font-medium ${item.color} rounded-xl transition-all duration-150`}
+                          >
+                            <span className="text-slate-400 group-hover:text-inherit">{item.icon}</span>
+                            <span>{item.label}</span>
+                          </button>
+                        ))}
+
+                        <hr className="my-1.5 border-slate-100"/>
+
+                        <button
+                          onClick={logout}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-all duration-150"
+                        >
+                          <FiLogOut size={16} />
+                          <span>Sign Out</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
 
-              {/* Mobile hamburger */}
+              {/* Mobile Hamburger menu */}
               <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-                aria-label="Menu"
+                onClick={() => setMobileOpen(true)}
+                className="md:hidden w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors"
+                aria-label="Open menu"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {mobileOpen
-                    ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                    : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>}
-                </svg>
+                <FiMenu size={20} />
               </button>
             </div>
           </div>
         </div>
-
-        {/* ── Mobile Menu ── */}
-        {mobileOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-1 animate-fadeIn shadow-lg">
-            {NAV_ITEMS.map(item => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-medium text-sm transition-colors ${
-                  isActive(item.path, item.exact)
-                    ? "bg-orange-50 text-orange-600"
-                    : "text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-
-            <div className="pt-2 border-t border-slate-100 space-y-1">
-              <button onClick={() => navigate("/search")} className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-slate-700 hover:bg-slate-50 font-medium text-sm">
-                🔍 Search
-              </button>
-
-              {token ? (
-                <>
-                  <button onClick={() => navigate("/favorites")} className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-slate-700 hover:bg-red-50 hover:text-red-600 font-medium text-sm">
-                    ❤️ Favorites {favCount > 0 && <span className="ml-auto bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{favCount}</span>}
-                  </button>
-                  <button onClick={() => navigate("/profile")} className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-slate-700 hover:bg-slate-50 font-medium text-sm">
-                    👤 My Profile
-                  </button>
-                  <button onClick={() => navigate("/myorders")} className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-slate-700 hover:bg-orange-50 hover:text-orange-600 font-medium text-sm">
-                    📦 My Orders
-                  </button>
-                  <button onClick={logout} className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-red-500 hover:bg-red-50 font-medium text-sm">
-                    🚪 Sign Out
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => { setShowLogin(true); setMobileOpen(false); }}
-                  className="w-full mt-1 py-3.5 bg-slate-900 text-white font-bold rounded-2xl text-sm transition-colors"
-                >
-                  Sign in
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </nav>
 
-      {/* Spacer */}
-      <div className="h-[68px]" />
+      {/* Spacer to prevent page content overlap */}
+      <div className="h-20" />
+
+      {/* ── Mobile Side Drawer Menu ── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop Blur Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 cursor-pointer"
+            />
+
+            {/* Slide-out Drawer Panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-2xl z-50 flex flex-col p-6 border-l border-slate-100"
+            >
+              {/* Close Button */}
+              <div className="flex items-center justify-between mb-8">
+                <span className="font-poppins font-bold text-lg text-slate-900">Menu</span>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 flex items-center justify-center hover:bg-slate-100"
+                  aria-label="Close menu"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
+
+              {/* Navigation links */}
+              <div className="flex flex-col gap-2 mb-6">
+                {NAV_ITEMS.map(item => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center px-4 py-3.5 rounded-2xl font-semibold text-sm transition-colors ${
+                      isActive(item.path, item.exact)
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              <hr className="border-slate-100 my-4" />
+
+              {/* Extra Account Actions in mobile drawer */}
+              <div className="flex flex-col gap-2 mt-auto">
+                {token ? (
+                  <>
+                    <button 
+                      onClick={() => { navigate("/profile"); setMobileOpen(false); }} 
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-slate-750 font-semibold text-sm hover:bg-slate-50"
+                    >
+                      <FiUser size={18} className="text-slate-400" />
+                      <span>My Profile</span>
+                    </button>
+                    <button 
+                      onClick={() => { navigate("/myorders"); setMobileOpen(false); }} 
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-slate-750 font-semibold text-sm hover:bg-slate-50"
+                    >
+                      <FiShoppingBag size={18} className="text-slate-400" />
+                      <span>My Orders</span>
+                    </button>
+                    <button 
+                      onClick={() => { navigate("/favorites"); setMobileOpen(false); }} 
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-slate-750 font-semibold text-sm hover:bg-slate-50"
+                    >
+                      <FiHeart size={18} className="text-slate-400" />
+                      <span>My Favorites</span>
+                    </button>
+                    <button 
+                      onClick={logout} 
+                      className="flex items-center gap-3 w-full px-4 py-3 mt-4 rounded-2xl text-rose-650 bg-rose-50 font-bold text-sm hover:bg-rose-100 transition-colors"
+                    >
+                      <FiLogOut size={18} />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => { setShowLogin(true); setMobileOpen(false); }}
+                    variant="primary"
+                    size="lg"
+                    className="w-full font-bold shadow-emerald-lg"
+                  >
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };

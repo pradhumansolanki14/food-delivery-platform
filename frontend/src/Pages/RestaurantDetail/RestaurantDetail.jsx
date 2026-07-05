@@ -1,17 +1,25 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiArrowLeft, FiClock, FiTruck, FiDollarSign, FiInfo, FiStar, FiChevronRight, FiSearch, FiX } from 'react-icons/fi';
 import { StoreContext } from '../../context/StoreContext';
+import { Container, Button, Card, Badge, Skeleton } from '../../components/ui';
 
-const StarRating = ({ rating }) => (
-  <div className="flex items-center gap-1">
-    {[1,2,3,4,5].map(s => (
-      <svg key={s} className={`w-4 h-4 ${s <= Math.round(rating) ? 'text-amber-400' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    ))}
-  </div>
-);
+const StarRating = ({ rating }) => {
+  const roundedRating = Math.round(rating || 0);
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`Rating: ${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <FiStar 
+          key={s} 
+          size={12} 
+          className={s <= roundedRating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} 
+        />
+      ))}
+    </div>
+  );
+};
 
 const RestaurantDetail = () => {
   const { id } = useParams();
@@ -23,6 +31,7 @@ const RestaurantDetail = () => {
   const [loading, setLoading] = useState(true);
   const [isVeg, setIsVeg] = useState(false);
   const [menuSearch, setMenuSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState('');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -32,12 +41,10 @@ const RestaurantDetail = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Get restaurant details
       const rRes = await axios.get(`${url}/api/food/restaurants/${id}`);
       if (!rRes.data.success) { navigate('/restaurants'); return; }
       setRestaurant(rRes.data.data.restaurant);
 
-      // Get menu (will re-fetch with isVeg filter when toggled)
       const mRes = await axios.get(`${url}/api/food/list?restaurantId=${id}`);
       if (mRes.data.success) setMenu(mRes.data.data);
     } catch {
@@ -77,26 +84,62 @@ const RestaurantDetail = () => {
 
   const isClosed = restaurant && !restaurant.isOpen;
 
+  // Track dynamic category scrolling to update active pill
+  useEffect(() => {
+    const handleScroll = () => {
+      const categories = Object.keys(grouped);
+      for (const cat of categories) {
+        const el = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top >= 0 && rect.top <= 250) {
+            setActiveCategory(cat);
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [grouped]);
+
+  const scrollToCategory = (catName) => {
+    setActiveCategory(catName);
+    const el = document.getElementById(`cat-${catName.replace(/\s+/g, '-')}`);
+    if (el) {
+      const topOffset = el.getBoundingClientRect().top + window.scrollY - 150;
+      window.scrollTo({ top: topOffset, behavior: 'smooth' });
+    }
+  };
+
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 animate-pulse">
-      <div className="h-56 bg-slate-200" />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-4">
-        <div className="h-8 bg-slate-200 rounded-2xl w-1/2" />
-        <div className="h-4 bg-slate-100 rounded-xl w-1/3" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-          {[1,2,3,4].map(i => <div key={i} className="h-20 bg-slate-100 rounded-2xl" />)}
+    <div className="min-h-screen bg-slate-50">
+      <div className="h-64 sm:h-80 bg-slate-100 animate-pulse" />
+      <Container className="pb-16 -mt-10">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm border border-slate-100">
+          <Skeleton variant="title" className="w-1/3" />
+          <Skeleton variant="text" className="w-1/2" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 rounded-2xl" />)}
+          </div>
         </div>
-        <div className="h-48 bg-white rounded-3xl mt-6" />
-      </div>
+        <div className="mt-8 space-y-4">
+          <Skeleton variant="title" className="w-1/4" />
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+          </div>
+        </div>
+      </Container>
     </div>
   );
 
   if (!restaurant) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Cover image */}
-      <div className="relative h-56 sm:h-72 bg-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      
+      {/* ── Hero Image & Floating Controls ── */}
+      <div className="relative h-64 sm:h-80 bg-slate-100 overflow-hidden">
         {restaurant.coverImage ? (
           <img
             src={`${url}/images/${restaurant.coverImage}`}
@@ -104,235 +147,309 @@ const RestaurantDetail = () => {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-            <span className="text-7xl">🏪</span>
+          <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
+            <span className="text-6xl">🏪</span>
           </div>
         )}
-        {/* Dark overlay for text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent" />
 
-        {/* Back button */}
+        {/* Back navigation */}
         <button
           onClick={() => navigate('/restaurants')}
-          className="absolute top-4 left-4 w-10 h-10 rounded-2xl bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-700 hover:bg-white transition-all"
+          className="absolute top-6 left-6 w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md shadow-md flex items-center justify-center text-slate-700 hover:bg-white hover:scale-105 transition-all"
+          aria-label="Back to restaurants"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <FiArrowLeft size={20} />
         </button>
 
-        {/* Open/Closed badge */}
-        <div className="absolute top-4 right-4">
-          <span className={`px-3 py-1.5 text-sm font-bold rounded-2xl shadow-sm ${
-            restaurant.isOpen
-              ? 'bg-emerald-500 text-white'
-              : 'bg-slate-900/80 text-white backdrop-blur-sm'
-          }`}>
-            {restaurant.isOpen ? '● Open' : '✕ Closed'}
-          </span>
+        {/* Floating status tag */}
+        <div className="absolute top-6 right-6">
+          <Badge variant={restaurant.isOpen ? 'success' : 'neutral'} className="backdrop-blur-md bg-white/95 px-4 py-2 text-sm shadow-md font-bold rounded-2xl">
+            {restaurant.isOpen ? '● Open Now' : '✕ Closed'}
+          </Badge>
         </div>
 
-        {/* Logo */}
+        {/* Logo overlay */}
         {restaurant.logo && (
-          <div className="absolute bottom-4 left-4 sm:left-6 w-16 h-16 rounded-2xl bg-white border-2 border-white shadow-lg overflow-hidden">
+          <div className="absolute bottom-6 left-6 w-20 h-20 rounded-3xl bg-white border-2 border-white shadow-lg overflow-hidden hidden sm:block">
             <img src={`${url}/images/${restaurant.logo}`} alt="Logo" className="w-full h-full object-cover" />
           </div>
         )}
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
-        {/* Restaurant info card */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-card p-6 sm:p-8 -mt-6 mb-6 relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className={restaurant.logo ? 'sm:pl-14' : ''}>
-              <h1 className="font-bold text-2xl sm:text-3xl text-slate-900 mb-2">{restaurant.name}</h1>
+      {/* ── Main Details Layout ── */}
+      <Container className="pb-16 -mt-10 relative z-10">
+        
+        {/* Info card box */}
+        <Card variant="default" radius="3xl" padding="lg" className="border border-slate-100/80 shadow-card mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            <div className="flex-1">
+              <h1 className="font-poppins font-extrabold text-2xl sm:text-3xl text-slate-900 mb-2">
+                {restaurant.name}
+              </h1>
 
-              {/* Cuisine tags */}
+              {/* Cuisine list */}
               {restaurant.cuisine && (
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-1.5 mb-3.5">
                   {restaurant.cuisine.split(',').map((c, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-orange-50 text-orange-600 text-xs font-semibold rounded-xl border border-orange-100">
+                    <Badge key={i} variant="primary" size="sm" rounded="md" className="bg-emerald-50 text-emerald-700 font-bold border-0">
                       {c.trim()}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               )}
 
-              {/* Rating */}
-              <div className="flex items-center gap-2 mb-3">
+              {/* Rating metrics */}
+              <div className="flex items-center gap-2 mb-4 bg-slate-50 border border-slate-100 p-2 rounded-xl w-fit">
                 <StarRating rating={restaurant.rating || 0} />
-                <span className="text-sm font-bold text-slate-900">{restaurant.rating?.toFixed(1) || '—'}</span>
+                <span className="text-xs font-bold text-slate-900">{restaurant.rating?.toFixed(1) || '0.0'}</span>
                 {restaurant.totalReviews > 0 && (
-                  <span className="text-xs text-slate-400">({restaurant.totalReviews} reviews)</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">({restaurant.totalReviews} customer reviews)</span>
                 )}
               </div>
 
               {/* Description */}
               {restaurant.description && (
-                <p className="text-slate-500 text-sm leading-relaxed max-w-lg">{restaurant.description}</p>
+                <p className="text-slate-550 text-xs leading-relaxed max-w-xl">
+                  {restaurant.description}
+                </p>
               )}
             </div>
           </div>
 
-          {/* Info strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-slate-50">
+          {/* Quick Metrics Details Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-6 pt-6 border-t border-slate-100">
             {[
-              { icon: '💰', label: 'Delivery fee', value: `$${restaurant.deliveryFee ?? 2}` },
-              { icon: '⏱', label: 'Prep time', value: `${restaurant.preparationTime ?? 30} min` },
-              { icon: '🕐', label: 'Hours', value: restaurant.openingHours || '—' },
-              { icon: '🛒', label: 'Min order', value: restaurant.minOrder > 0 ? `$${restaurant.minOrder}` : 'None' },
+              { icon: <FiDollarSign size={18} className="text-emerald-600" />, label: 'Delivery fee', value: `$${restaurant.deliveryFee ?? 2}` },
+              { icon: <FiClock size={18} className="text-emerald-600" />, label: 'Prep time', value: `${restaurant.preparationTime ?? 30} mins` },
+              { icon: <FiClock size={18} className="text-emerald-600" />, label: 'Hours', value: restaurant.openingHours || '—' },
+              { icon: <FiInfo size={18} className="text-emerald-600" />, label: 'Min order', value: restaurant.minOrder > 0 ? `$${restaurant.minOrder}` : 'None' },
             ].map((info, i) => (
-              <div key={i} className="flex items-center gap-2.5 p-3 bg-slate-50 rounded-2xl">
-                <span className="text-xl flex-shrink-0">{info.icon}</span>
+              <div key={i} className="flex items-center gap-3 p-3 bg-slate-50/75 border border-slate-100/50 rounded-2xl">
+                <div className="w-9 h-9 rounded-xl bg-white border border-slate-100/40 flex items-center justify-center shadow-sm">
+                  {info.icon}
+                </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-400 font-medium">{info.label}</p>
-                  <p className="text-sm font-bold text-slate-900 truncate">{info.value}</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{info.label}</p>
+                  <p className="text-xs font-bold text-slate-800 truncate">{info.value}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Closed banner */}
+          {/* Closed banner alert block */}
           {isClosed && (
-            <div className="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-2xl flex items-center gap-3">
-              <span className="text-2xl">⏸</span>
+            <div className="mt-5 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3 text-amber-800">
+              <FiInfo size={22} className="flex-shrink-0" />
               <div>
-                <p className="font-bold text-slate-800 text-sm">This restaurant is currently closed</p>
-                <p className="text-xs text-slate-500">You can browse the menu but cannot place an order right now.</p>
+                <p className="font-bold text-sm">Restaurant is closed</p>
+                <p className="text-xs text-amber-600/90">Menus are browse-only. Ordering is disabled until the kitchen opens.</p>
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
-        {/* Menu section */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-card p-6 sm:p-8">
-          {/* Menu header + filters */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="font-bold text-xl text-slate-900">Menu</h2>
+        {/* ── Sticky Category quick navigator bar ── */}
+        {Object.keys(grouped).length > 0 && (
+          <div className="sticky top-20 bg-white/90 backdrop-blur-md z-30 border border-slate-100/80 rounded-2xl p-2.5 shadow-sm flex items-center gap-2 overflow-x-auto scrollbar-hide mb-6">
+            {Object.keys(grouped).map((catName) => {
+              const active = activeCategory === catName;
+              return (
+                <button
+                  key={catName}
+                  onClick={() => scrollToCategory(catName)}
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 uppercase tracking-wider ${
+                    active
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {catName}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── Menu Section & Items List ── */}
+        <Card variant="default" radius="3xl" padding="lg" className="border border-slate-100/80 shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <h2 className="font-poppins font-extrabold text-xl text-slate-900">Menu Catalog</h2>
             <div className="flex items-center gap-3 flex-wrap">
-              {/* Veg filter toggle */}
+              {/* Veg switch filter */}
               <button
                 onClick={handleVegToggle}
-                className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold transition-all border ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all duration-300 border ${
                   isVeg
-                    ? 'bg-emerald-500 text-white border-emerald-500'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-emerald'
                     : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
                 }`}
               >
-                <span>🥦</span>
-                Veg only
+                <span className="w-3.5 h-3.5 rounded border border-current flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 bg-current rounded-full" />
+                </span>
+                Veg Only
               </button>
 
-              {/* Menu search */}
-              <div className="flex items-center gap-2 bg-slate-50 border-2 border-slate-100 rounded-2xl px-3 py-2 focus-within:border-orange-300 transition-colors">
-                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+              {/* Input search query block */}
+              <div className="relative flex items-center">
                 <input
                   type="text"
-                  placeholder="Search menu..."
+                  placeholder="Search menu catalog..."
                   value={menuSearch}
                   onChange={e => setMenuSearch(e.target.value)}
-                  className="bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none w-36"
+                  className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-semibold placeholder-slate-400 outline-none w-44 focus:border-emerald-350 focus:bg-white transition-all duration-300 pr-8"
                 />
-                {menuSearch && (
-                  <button onClick={() => setMenuSearch('')} className="text-slate-300 hover:text-slate-500">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                {menuSearch ? (
+                  <button 
+                    onClick={() => setMenuSearch('')} 
+                    className="absolute right-2.5 text-slate-400 hover:text-slate-600"
+                    aria-label="Clear menu search"
+                  >
+                    <FiX size={14} />
                   </button>
+                ) : (
+                  <FiSearch className="absolute right-3 text-slate-400" size={14} />
                 )}
               </div>
             </div>
           </div>
 
-          {/* Grouped menu items */}
+          {/* Render Categories and Food Rows */}
           {Object.keys(grouped).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400">
-              <span className="text-5xl mb-3">🍽️</span>
-              <p className="font-semibold text-slate-600">No items found</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center max-w-sm mx-auto">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-4">
+                <FiInfo size={24} />
+              </div>
+              <h3 className="font-poppins font-bold text-slate-800 text-base mb-1">No Dishes Match</h3>
+              <p className="text-slate-400 text-xs leading-relaxed mb-4">Try clearing filters or search parameters to browse all dishes.</p>
               {(isVeg || menuSearch) && (
-                <button
+                <Button
                   onClick={() => { setIsVeg(false); setMenuSearch(''); fetchMenu(false); }}
-                  className="mt-3 px-4 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 font-semibold rounded-xl text-xs transition-all"
+                  variant="secondary"
+                  size="sm"
+                  className="font-bold"
                 >
-                  Clear filters
-                </button>
+                  Reset Filters
+                </Button>
               )}
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-12">
               {Object.entries(grouped).map(([category, items]) => (
-                <div key={category}>
-                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div 
+                  key={category} 
+                  id={`cat-${category.replace(/\s+/g, '-')}`}
+                  className="scroll-mt-36"
+                >
+                  {/* Category Section Header bar */}
+                  <h3 className="font-poppins font-extrabold text-sm uppercase tracking-widest text-slate-900 mb-6 flex items-center gap-3">
                     <span className="flex-shrink-0">{category}</span>
                     <span className="flex-1 h-px bg-slate-100" />
-                    <span className="text-xs text-slate-400 font-normal tracking-normal">{items.length} item{items.length !== 1 ? 's' : ''}</span>
+                    <span className="text-[10px] text-slate-400 font-bold tracking-normal uppercase bg-slate-50 border border-slate-100/80 px-2 py-0.5 rounded-md">
+                      {items.length} choice{items.length !== 1 ? 's' : ''}
+                    </span>
                   </h3>
-                  <div className="space-y-3">
+
+                  {/* Menu Dishes Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {items.map(item => {
                       const qty = cartItems[item._id] || 0;
                       return (
-                        <div key={item._id}
-                          className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl hover:bg-orange-50/30 transition-colors group">
-                          {/* Image */}
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                        <div 
+                          key={item._id}
+                          className="flex gap-4 p-4 bg-slate-50 border border-slate-100/50 rounded-2xl hover:bg-emerald-50/15 hover:border-emerald-100/50 transition-all duration-300 group"
+                        >
+                          {/* Dish visual container */}
+                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-150 flex-shrink-0 shadow-sm border border-slate-100/20 relative">
                             <img
                               src={`${url}/images/${item.image}`}
                               alt={item.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
                               onError={e => { e.target.style.display = 'none'; }}
                             />
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
-                              {item.isVeg && (
-                                <span className="flex-shrink-0 w-4 h-4 rounded border-2 border-emerald-500 flex items-center justify-center">
-                                  <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-                                </span>
-                              )}
-                            </div>
-                            {item.description && (
-                              <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-2">{item.description}</p>
-                            )}
-                            <p className="font-bold text-orange-500">${item.price}</p>
-                          </div>
-
-                          {/* Cart controls */}
-                          <div className="flex-shrink-0">
-                            {isClosed ? (
-                              <span className="text-xs text-slate-400 font-medium px-3 py-1.5 bg-slate-100 rounded-xl">Closed</span>
-                            ) : qty === 0 ? (
-                              <button
-                                onClick={() => addToCart(item._id, id)}
-                                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-xs transition-all shadow-sm hover:shadow-md"
-                              >
-                                Add
-                              </button>
-                            ) : (
-                              <div className="flex items-center gap-2 bg-white border-2 border-orange-100 rounded-xl px-1 py-1">
-                                <button
-                                  onClick={() => removeFromCart(item._id)}
-                                  className="w-7 h-7 rounded-lg bg-orange-50 hover:bg-orange-100 flex items-center justify-center text-orange-500 transition-colors"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
-                                  </svg>
-                                </button>
-                                <span className="font-bold text-slate-900 text-sm w-5 text-center">{qty}</span>
-                                <button
-                                  onClick={() => addToCart(item._id, id)}
-                                  className="w-7 h-7 rounded-lg bg-orange-500 hover:bg-orange-600 flex items-center justify-center text-white transition-colors"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                                  </svg>
-                                </button>
+                            {/* Available state flag */}
+                            {!item.isAvailable && (
+                              <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center text-center">
+                                <span className="text-[10px] text-white font-bold uppercase tracking-wider">Out of Stock</span>
                               </div>
                             )}
+                          </div>
+
+                          {/* Dish Description metrics */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-poppins font-bold text-slate-900 text-sm truncate">{item.name}</p>
+                                
+                                {/* Indian Veg indicator square box */}
+                                {item.isVeg && (
+                                  <span className="flex-shrink-0 w-4 h-4 rounded border-2 border-emerald-500 flex items-center justify-center" aria-label="Vegetarian">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                  </span>
+                                )}
+                              </div>
+                              {item.description && (
+                                <p className="text-slate-400 text-xs leading-relaxed line-clamp-2 mb-2">
+                                  {item.description}
+                                </p>
+                              )}
+                              
+                              {/* Extra item tags - Calories / Prep times */}
+                              <div className="flex flex-wrap gap-1.5 items-center">
+                                {item.calories && (
+                                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    🔥 {item.calories} kcal
+                                  </span>
+                                )}
+                                {item.preparationTime && (
+                                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    ⏱ {item.preparationTime} mins
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Price and Cart control row */}
+                            <div className="flex items-center justify-between border-t border-slate-100/50 pt-2.5 mt-2">
+                              <span className="font-poppins font-extrabold text-sm text-slate-805">${item.price}</span>
+                              
+                              <div className="flex-shrink-0">
+                                {isClosed ? (
+                                  <Badge variant="neutral" size="sm" rounded="md" className="font-bold">Closed</Badge>
+                                ) : !item.isAvailable ? (
+                                  <Badge variant="neutral" size="sm" rounded="md" className="font-bold">Unavailable</Badge>
+                                ) : qty === 0 ? (
+                                  <Button
+                                    onClick={() => addToCart(item._id, id)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 font-bold border-slate-200 hover:border-emerald-300 hover:text-emerald-600 rounded-xl"
+                                  >
+                                    Add to Cart
+                                  </Button>
+                                ) : (
+                                  <div className="flex items-center gap-2.5 bg-white border border-slate-100 rounded-xl p-1 shadow-sm">
+                                    <button
+                                      onClick={() => removeFromCart(item._id)}
+                                      className="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center text-slate-500 transition-colors"
+                                      aria-label="Decrease quantity"
+                                    >
+                                      <FiX size={12} />
+                                    </button>
+                                    <span className="font-poppins font-bold text-slate-900 text-xs w-4 text-center">{qty}</span>
+                                    <button
+                                      onClick={() => addToCart(item._id, id)}
+                                      className="w-6.5 h-6.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center text-white transition-colors"
+                                      aria-label="Increase quantity"
+                                    >
+                                      <FiChevronRight size={12} className="rotate-90" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
                           </div>
                         </div>
                       );
@@ -342,8 +459,9 @@ const RestaurantDetail = () => {
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </Card>
+
+      </Container>
     </div>
   );
 };

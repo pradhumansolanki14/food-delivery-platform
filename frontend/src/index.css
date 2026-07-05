@@ -1,9 +1,14 @@
+/* ═══════════════════════════════════════════════════════════
+   SPRINT 1: Google Fonts CDN (Inter + Syne) KEPT for backward
+   compatibility. Poppins is loaded via @fontsource in main.jsx.
+   ═══════════════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Base Reset ─────────────────────────────────────────── */
 @layer base {
   * {
     margin: 0;
@@ -18,7 +23,8 @@
   }
 
   body {
-    font-family: 'Inter', sans-serif;
+    /* Sprint 1: Poppins as primary, Inter as fallback */
+    font-family: 'Poppins', 'Inter', sans-serif;
     background-color: #ffffff;
     color: #0f172a;
   }
@@ -27,36 +33,52 @@
     text-decoration: none;
     color: inherit;
   }
+
+  /* Accessible focus ring for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+  }
+
+  /* Smooth transitions for interactive elements */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
 }
 
+/* ─── Existing Utilities (PRESERVED — do not remove) ──────── */
 @layer utilities {
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  /* Scrollbar */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
-  .font-display {
-    font-family: 'Syne', sans-serif;
-  }
+  /* Font utilities */
+  .font-display { font-family: 'Poppins', 'Syne', sans-serif; }
+  .font-inter   { font-family: 'Inter', sans-serif; }
+  .font-poppins { font-family: 'Poppins', sans-serif; }
 
+  /* ── Existing gradient utilities (PRESERVED) ───────────── */
   .gradient-orange {
     background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
   }
-
   .gradient-hero {
     background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #ecfdf5 100%);
   }
-
   .text-gradient {
     background: linear-gradient(135deg, #f97316, #ea580c);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-
   .text-gradient-green {
     background: linear-gradient(135deg, #10b981, #059669);
     -webkit-background-clip: text;
@@ -64,74 +86,181 @@
     background-clip: text;
   }
 
+  /* ── New primary (emerald) gradient utilities ───────────── */
+  .gradient-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+  .gradient-emerald {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+  .gradient-mint {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+  .text-gradient-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-emerald {
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Existing card + button utilities (PRESERVED) ─────── */
   .card-hover {
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   }
-
   .card-hover:hover {
     transform: translateY(-6px);
     box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.15);
   }
-
+  /* Orange primary button (PRESERVED) */
   .btn-primary {
     background: linear-gradient(135deg, #f97316, #ea580c);
     transition: all 0.2s ease;
   }
-
   .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px -5px rgba(249, 115, 22, 0.5);
   }
 
+  /* ── New emerald button utility (Sprint 1) ──────────────── */
+  .btn-emerald {
+    background: linear-gradient(135deg, #10b981, #059669);
+    transition: all 0.2s ease;
+  }
+  .btn-emerald:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.45);
+  }
+
+  /* Glassmorphism */
   .glass {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* ── Skeleton shimmer ──────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #f1f5f9 0%,
+      #e2e8f0 40%,
+      #f1f5f9 80%,
+      #f1f5f9 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+
+  /* ── Focus ring utility ───────────────────────────────── */
+  .focus-ring:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+  }
+  .focus-ring-orange:focus-visible {
+    outline: 2px solid #f97316;
+    outline-offset: 2px;
+  }
+
+  /* ── Truncate helpers ─────────────────────────────────── */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
 }
 
+/* ─── Keyframe Animations (PRESERVED + new additions) ────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
-
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
+  to   { opacity: 1; transform: scale(1); }
 }
-
 @keyframes slideRight {
   from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  to   { opacity: 1; transform: translateX(0); }
 }
-
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50%       { transform: translateY(-10px); }
 }
-
 @keyframes rotate {
   100% { transform: rotate(360deg); }
 }
-
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { opacity: 1; transform: scale(1.05); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
 }
 
-.animate-fadeUp { animation: fadeUp 0.6s ease forwards; }
-.animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
-.animate-scaleIn { animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.animate-slideRight { animation: slideRight 0.5s ease forwards; }
-.animate-float { animation: float 3s ease-in-out infinite; }
+/* ─── Animation Classes (PRESERVED + new) ────────────────── */
+.animate-fadeUp      { animation: fadeUp 0.6s ease forwards; }
+.animate-fadeDown    { animation: fadeDown 0.4s ease forwards; }
+.animate-fadeIn      { animation: fadeIn 0.4s ease forwards; }
+.animate-scaleIn     { animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-slideRight  { animation: slideRight 0.5s ease forwards; }
+.animate-slideUp     { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slideLeft   { animation: slideLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-float       { animation: float 3s ease-in-out infinite; }
+.animate-bounce-in   { animation: bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 
-.delay-100 { animation-delay: 0.1s; }
-.delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
-.delay-400 { animation-delay: 0.4s; }
-.delay-500 { animation-delay: 0.5s; }
+/* ─── Animation Delay Utilities (PRESERVED + new) ──────── */
+.delay-100  { animation-delay: 0.1s; }
+.delay-200  { animation-delay: 0.2s; }
+.delay-300  { animation-delay: 0.3s; }
+.delay-400  { animation-delay: 0.4s; }
+.delay-500  { animation-delay: 0.5s; }
+.delay-600  { animation-delay: 0.6s; }
+.delay-700  { animation-delay: 0.7s; }
+.delay-800  { animation-delay: 0.8s; }

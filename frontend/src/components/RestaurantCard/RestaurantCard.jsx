@@ -1,20 +1,26 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiStar, FiClock, FiMapPin, FiTruck } from 'react-icons/fi';
+import { Card, Badge } from '../ui';
 
-const StarRating = ({ rating }) => (
-  <div className="flex items-center gap-1">
-    {[1,2,3,4,5].map(s => (
-      <svg key={s} className={`w-3.5 h-3.5 ${s <= Math.round(rating) ? 'text-amber-400' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    ))}
-  </div>
-);
+const StarRating = ({ rating }) => {
+  const roundedRating = Math.round(rating || 0);
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`Rating: ${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <FiStar 
+          key={s} 
+          size={12} 
+          className={s <= roundedRating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} 
+        />
+      ))}
+    </div>
+  );
+};
 
 /**
  * RestaurantCard
- * Displays a restaurant summary in the listing grid.
- * Non-clickable (pointer-events-none on content, no navigate) when restaurant is closed.
+ * Displays a restaurant summary in a premium 2026 SaaS layout.
  */
 const RestaurantCard = ({ restaurant, url }) => {
   const navigate = useNavigate();
@@ -25,98 +31,104 @@ const RestaurantCard = ({ restaurant, url }) => {
   };
 
   return (
-    <div
+    <Card
+      variant={isClosed ? 'flat' : 'default'}
+      padding="none"
+      radius="2xl"
       onClick={handleClick}
-      className={`bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300 
-        ${isClosed
-          ? 'opacity-70 cursor-not-allowed'
-          : 'hover:shadow-card hover:-translate-y-1 cursor-pointer group'
-        }`}
+      className={`group relative flex flex-col h-full border border-slate-100/80 transition-all duration-300 ${
+        isClosed
+          ? 'opacity-65 cursor-not-allowed select-none'
+          : 'hover:shadow-card-hover hover:border-slate-200/60 cursor-pointer'
+      }`}
     >
-      {/* Cover image / logo area */}
-      <div className="relative h-44 bg-slate-100 overflow-hidden">
+      {/* ── Image Cover Area ── */}
+      <div className="relative h-48 bg-slate-50 overflow-hidden rounded-t-2xl">
         {restaurant.coverImage ? (
           <img
             src={`${url}/images/${restaurant.coverImage}`}
             alt={restaurant.name}
-            className={`w-full h-full object-cover transition-transform duration-500 ${!isClosed ? 'group-hover:scale-105' : ''}`}
+            className={`w-full h-full object-cover transition-transform duration-700 ease-out ${
+              !isClosed ? 'group-hover:scale-105' : ''
+            }`}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
-            <span className="text-5xl">🏪</span>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600">
+            <span className="font-poppins font-bold text-2xl">🏪</span>
           </div>
         )}
 
-        {/* Closed overlay */}
+        {/* Closed Overlay */}
         {isClosed && (
-          <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
-            <span className="px-4 py-2 bg-slate-900/80 text-white text-sm font-bold rounded-2xl backdrop-blur-sm">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="px-5 py-2.5 bg-slate-950/85 text-white text-xs font-bold rounded-2xl tracking-wider uppercase">
               Closed
             </span>
           </div>
         )}
 
-        {/* Logo chip */}
+        {/* Logo badge overlay */}
         {restaurant.logo && (
-          <div className="absolute bottom-3 left-3 w-12 h-12 rounded-2xl bg-white border-2 border-white shadow-lg overflow-hidden">
+          <div className="absolute bottom-4 left-4 w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-md overflow-hidden">
             <img src={`${url}/images/${restaurant.logo}`} alt="Logo" className="w-full h-full object-cover" />
           </div>
         )}
 
-        {/* Open badge */}
+        {/* Open badge overlay */}
         {!isClosed && (
-          <div className="absolute top-3 right-3">
-            <span className="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm">
+          <div className="absolute top-4 right-4">
+            <Badge variant="success" size="sm" rounded="full" className="shadow-sm">
               Open
-            </span>
+            </Badge>
           </div>
         )}
       </div>
 
-      {/* Info */}
-      <div className="p-4">
-        <h3 className={`font-bold text-slate-900 text-base mb-1 truncate ${!isClosed ? 'group-hover:text-orange-500 transition-colors' : ''}`}>
-          {restaurant.name}
-        </h3>
+      {/* ── Content Area ── */}
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div>
+          {/* Title */}
+          <h3 className={`font-poppins font-bold text-slate-905 text-base mb-1.5 line-clamp-1 transition-colors ${
+            !isClosed ? 'group-hover:text-emerald-600' : ''
+          }`}>
+            {restaurant.name}
+          </h3>
 
-        {/* Cuisine tags */}
-        {restaurant.cuisine && (
-          <p className="text-xs text-slate-500 mb-2 truncate">{restaurant.cuisine}</p>
-        )}
-
-        {/* Star + rating */}
-        <div className="flex items-center gap-2 mb-3">
-          <StarRating rating={restaurant.rating || 0} />
-          <span className="text-xs font-semibold text-slate-700">{restaurant.rating?.toFixed(1) || '—'}</span>
-          {restaurant.totalReviews > 0 && (
-            <span className="text-xs text-slate-400">({restaurant.totalReviews})</span>
+          {/* Cuisine info */}
+          {restaurant.cuisine && (
+            <p className="text-xs font-medium text-slate-400 mb-3.5 flex items-center gap-1">
+              <FiMapPin size={12} className="text-slate-350" />
+              <span className="truncate">{restaurant.cuisine}</span>
+            </p>
           )}
+
+          {/* Ratings info */}
+          <div className="flex items-center gap-2 mb-4 bg-slate-50/50 border border-slate-100/50 p-2 rounded-xl w-fit">
+            <StarRating rating={restaurant.rating || 0} />
+            <span className="text-xs font-bold text-slate-800">{restaurant.rating?.toFixed(1) || '0.0'}</span>
+            {restaurant.totalReviews > 0 && (
+              <span className="text-[10px] font-semibold text-slate-400">({restaurant.totalReviews} reviews)</span>
+            )}
+          </div>
         </div>
 
-        {/* Meta strip */}
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* Meta details */}
+        <div className="flex items-center justify-between border-t border-slate-50 pt-3.5 mt-auto">
           {restaurant.deliveryFee !== undefined && (
-            <span className="flex items-center gap-1 text-xs text-slate-500">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              ${restaurant.deliveryFee} delivery
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+              <FiTruck size={14} className="text-emerald-500" />
+              <span>${restaurant.deliveryFee} delivery</span>
             </span>
           )}
           {restaurant.preparationTime && (
-            <span className="flex items-center gap-1 text-xs text-slate-500">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {restaurant.preparationTime} min
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+              <FiClock size={14} className="text-emerald-500" />
+              <span>{restaurant.preparationTime} min</span>
             </span>
-          )}
-          {restaurant.minOrder > 0 && (
-            <span className="text-xs text-slate-400">Min ${restaurant.minOrder}</span>
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

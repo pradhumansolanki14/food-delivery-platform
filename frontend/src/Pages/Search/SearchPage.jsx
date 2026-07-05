@@ -1,151 +1,184 @@
-import React, { useState, useEffect, useContext, useRef } from 'react'
-import { StoreContext } from '../../context/StoreContext'
-import FoodItem from '../../components/FoodItem/FoodItem'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiInfo, FiTrendingUp, FiSearch, FiSliders } from 'react-icons/fi';
+import { StoreContext } from '../../context/StoreContext';
+import FoodItem from '../../components/FoodItem/FoodItem';
+import { Container, SearchInput, Button } from '../../components/ui';
 
-const CATEGORIES = ["All", "Salad", "Rolls", "Deserts", "Sandwich", "Cake", "Pure Veg", "Pasta", "Noodles"]
+const CATEGORIES = ["All", "Salad", "Rolls", "Deserts", "Sandwich", "Cake", "Pure Veg", "Pasta", "Noodles"];
 
 const SearchPage = () => {
-  const { food_list } = useContext(StoreContext)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [query, setQuery] = useState(searchParams.get('q') || '')
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [sortBy, setSortBy] = useState('default')
-  const inputRef = useRef(null)
-  const navigate = useNavigate()
+  const { food_list } = useContext(StoreContext);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [sortBy, setSortBy] = useState('default');
+  const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    inputRef.current?.focus();
+  }, []);
 
-  const q = query.toLowerCase().trim()
+  const q = query.toLowerCase().trim();
 
   let results = food_list.filter(item => {
-    const matchesSearch = !q || item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q) || item.description.toLowerCase().includes(q)
-    const matchesCategory = activeCategory === 'All' || item.category === activeCategory
-    return matchesSearch && matchesCategory
-  })
+    const matchesSearch = !q || item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q) || item.description.toLowerCase().includes(q);
+    const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-  if (sortBy === 'price-asc') results = [...results].sort((a, b) => a.price - b.price)
-  if (sortBy === 'price-desc') results = [...results].sort((a, b) => b.price - a.price)
-  if (sortBy === 'name') results = [...results].sort((a, b) => a.name.localeCompare(b.name))
+  if (sortBy === 'price-asc') results = [...results].sort((a, b) => a.price - b.price);
+  if (sortBy === 'price-desc') results = [...results].sort((a, b) => b.price - a.price);
+  if (sortBy === 'name') results = [...results].sort((a, b) => a.name.localeCompare(b.name));
 
   const handleSearch = (val) => {
-    setQuery(val)
-    if (val) setSearchParams({ q: val })
-    else setSearchParams({})
-  }
+    setQuery(val);
+    if (val) setSearchParams({ q: val });
+    else setSearchParams({});
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Search Header */}
-      <div className="bg-white border-b border-slate-100 sticky top-[72px] z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      
+      {/* ── Search Header Bar ── */}
+      <div className="bg-white border-b border-slate-100 sticky top-20 z-40 shadow-sm">
+        <Container className="py-4">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors flex-shrink-0">
-              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
-              </svg>
+            {/* Back button */}
+            <button
+              onClick={() => navigate(-1)}
+              className="w-11 h-11 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors flex-shrink-0 border border-slate-100"
+              aria-label="Go back"
+            >
+              <FiArrowLeft size={18} className="text-slate-650" />
             </button>
-            <div className="flex-1 flex items-center gap-3 bg-slate-50 border-2 border-slate-200 focus-within:border-orange-400 focus-within:bg-white rounded-2xl px-4 py-3 transition-all">
-              <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-              <input
+
+            {/* Input field */}
+            <div className="flex-1">
+              <SearchInput
                 ref={inputRef}
-                type="text"
+                placeholder="Search for delicious dishes, cuisines, categories..."
                 value={query}
                 onChange={e => handleSearch(e.target.value)}
-                placeholder="Search for dishes, categories..."
-                className="flex-1 bg-transparent text-sm text-slate-900 placeholder-slate-400 outline-none"
+                onClear={() => handleSearch('')}
               />
-              {query && (
-                <button onClick={() => handleSearch('')} className="text-slate-400 hover:text-slate-700 transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              )}
             </div>
           </div>
-        </div>
+        </Container>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Filters Row */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          {/* Categories */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide flex-1">
+      {/* ── Main Results Area ── */}
+      <Container className="py-8">
+        
+        {/* Filters Controls Row */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          
+          {/* Categories Pill list */}
+          <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide flex-1">
             {CATEGORIES.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`flex-shrink-0 px-4.5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                   activeCategory === cat
-                    ? 'bg-orange-500 text-white shadow-orange'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200 hover:text-orange-500'
-                }`}>
+                    ? 'bg-emerald-500 text-white shadow-emerald'
+                    : 'bg-white border border-slate-200 text-slate-500 hover:border-emerald-350 hover:text-emerald-600'
+                }`}
+              >
                 {cat}
               </button>
             ))}
           </div>
-          {/* Sort */}
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-            className="flex-shrink-0 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 focus:outline-none focus:border-orange-300 cursor-pointer">
-            <option value="default">Sort: Default</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-            <option value="name">Name: A–Z</option>
-          </select>
+
+          {/* Sort Selection Box */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
+              <FiSliders />
+              Sort:
+            </span>
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              className="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-600 focus:outline-none focus:border-emerald-450 cursor-pointer shadow-sm"
+            >
+              <option value="default">Relevance</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="name">Alphabetical (A–Z)</option>
+            </select>
+          </div>
         </div>
 
-        {/* Results header */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-slate-500">
+        {/* Results Metadata Summary */}
+        <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
             {q ? (
-              <><span className="font-semibold text-slate-900">{results.length}</span> results for &quot;<span className="text-orange-500 font-semibold">{query}</span>&quot;</>
+              <>Found <span className="font-bold text-slate-800">{results.length}</span> menu result{results.length !== 1 ? 's' : ''} for &quot;<span className="text-emerald-600 font-bold">{query}</span>&quot;</>
             ) : (
-              <><span className="font-semibold text-slate-900">{results.length}</span> items available</>
+              <><span className="font-bold text-slate-800">{results.length}</span> dishes available in catalog</>
             )}
           </p>
         </div>
 
-        {/* No results */}
+        {/* ── Search Output ── */}
         {results.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="w-24 h-24 rounded-3xl bg-slate-100 flex items-center justify-center text-5xl mb-5">🔍</div>
-            <h3 className="font-display text-xl font-bold text-slate-900 mb-2">No results found</h3>
-            <p className="text-slate-400 text-sm text-center max-w-xs">
-              We couldn't find &quot;{query}&quot;. Try a different keyword or browse by category.
+          <div className="flex flex-col items-center justify-center py-20 text-center max-w-sm mx-auto bg-white border border-slate-100 rounded-3xl shadow-card p-8">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-5">
+              <FiInfo size={28} />
+            </div>
+            <h3 className="font-poppins font-bold text-slate-800 text-lg mb-2">No Items Found</h3>
+            <p className="text-slate-400 text-sm leading-relaxed mb-6">
+              We couldn&apos;t find any dishes matching &quot;{query}&quot;. Please try search suggestions or browsing alternative categories.
             </p>
-            <button onClick={() => { handleSearch(''); setActiveCategory('All'); }}
-              className="mt-6 px-6 py-2.5 btn-primary text-white font-semibold rounded-xl shadow-orange text-sm">
+            <Button
+              onClick={() => { handleSearch(''); setActiveCategory('All'); }}
+              variant="primary"
+              size="md"
+              className="font-bold shadow-emerald-lg"
+            >
               Clear Search
-            </button>
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {results.map(item => (
-              <FoodItem key={item._id} id={item._id} name={item.name} description={item.description} price={item.price} image={item.image}/>
+              <FoodItem
+                key={item._id}
+                id={item._id}
+                name={item.name}
+                description={item.description}
+                price={item.price}
+                image={item.image}
+              />
             ))}
           </div>
         )}
 
-        {/* Popular suggestions when no query */}
+        {/* Popular Searches Suggestion block (visible only when query is empty) */}
         {!q && (
-          <div className="mt-12">
-            <h3 className="font-display font-bold text-slate-900 text-lg mb-4">🔥 Popular Searches</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-12 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+            <h3 className="font-poppins font-extrabold text-sm text-slate-800 mb-5 uppercase tracking-widest flex items-center gap-2">
+              <FiTrendingUp className="text-emerald-500" />
+              Trending Queries
+            </h3>
+            <div className="flex flex-wrap gap-2.5">
               {["Pizza", "Pasta", "Salad", "Cake", "Noodles", "Sandwich", "Rolls", "Ice Cream"].map(s => (
-                <button key={s} onClick={() => handleSearch(s)}
-                  className="px-4 py-2 bg-white border border-slate-200 hover:border-orange-300 hover:text-orange-500 text-sm font-medium text-slate-600 rounded-xl transition-all">
+                <button
+                  key={s}
+                  onClick={() => handleSearch(s)}
+                  className="px-4 py-2.5 bg-slate-50 hover:bg-emerald-50 border border-slate-150 hover:border-emerald-250 text-xs font-bold text-slate-650 hover:text-emerald-600 rounded-xl transition-all duration-200"
+                >
                   {s}
                 </button>
               ))}
             </div>
           </div>
         )}
-      </div>
-    </div>
-  )
-}
 
-export default SearchPage
+      </Container>
+    </div>
+  );
+};
+
+export default SearchPage;
