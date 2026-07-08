@@ -68,8 +68,6 @@ const maintenanceModeMiddleware = async (req, res, next) => {
 // Apply maintenance mode check to all routes
 app.use(maintenanceModeMiddleware);
 
-connectDB();
-
 app.use("/api/food",     foodRouter);
 app.use("/images",       express.static("uploads"));
 app.use("/api/user",     userRouter);
@@ -86,4 +84,11 @@ app.use("/api/banners", bannerRouter);
 app.use("/api/admin/restaurant", restaurantRouter);
 
 app.get("/", (req, res) => res.send("API Working"));
-app.listen(port, () => console.log(`Server started on http://localhost:${port}`));
+
+try {
+  await connectDB();
+  app.listen(port, () => console.log(`Server started on http://localhost:${port}`));
+} catch (error) {
+  console.error("[FATAL] MongoDB connection failed:", error.message);
+  process.exit(1);
+}

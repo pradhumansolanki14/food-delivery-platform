@@ -1,45 +1,108 @@
 import React, { useContext, useEffect, useState } from "react";
-import { StoreContext } from "../../context/StoreContext";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { FiArrowLeft, FiMapPin, FiTruck, FiCreditCard, FiLock, FiInfo, FiCheck } from "react-icons/fi";
+import { StoreContext } from "../../context/StoreContext";
+import { Container, Button, Card, Input } from "../../components/ui";
 
 const steps = [
-  { num: 1, label: "Delivery" },
-  { num: 2, label: "Payment" },
-  { num: 3, label: "Confirm" },
-]
+  { num: 1, label: "Delivery", active: true },
+  { num: 2, label: "Payment", active: false },
+  { num: 3, label: "Confirm", active: false },
+];
 
 const PlaceOrder = () => {
   const { getTotalCartAmount, token, food_list, cartItems, url } = useContext(StoreContext);
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+
   const [data, setData] = useState({
     firstName: "", lastName: "", email: "",
     street: "", city: "", state: "",
     zipcode: "", country: "", phone: "",
   });
 
+  const fetchProfileAndAddresses = async () => {
+    try {
+      // 1. Fetch Profile to prefill name, email, phone
+      const profRes = await axios.get(`${url}/api/user/profile`, { headers: { token } });
+      if (profRes.data.success) {
+        const u = profRes.data.data;
+        const nameParts = (u.name || "").trim().split(/\s+/);
+        const fName = nameParts[0] || "";
+        const lName = nameParts.slice(1).join(" ") || "";
+        setData(d => ({
+          ...d,
+          firstName: fName,
+          lastName: lName,
+          email: u.email || "",
+          phone: u.phone || "",
+        }));
+      }
+
+      // 2. Fetch Saved Addresses
+      const addrRes = await axios.get(`${url}/api/user/addresses`, { headers: { token } });
+      if (addrRes.data.success && Array.isArray(addrRes.data.data)) {
+        setAddresses(addrRes.data.data);
+      }
+    } catch (err) {
+      console.error("Error prefilling checkout:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/cart");
+    } else if (getTotalCartAmount() === 0) {
+      navigate("/cart");
+    } else {
+      fetchProfileAndAddresses();
+    }
+  }, [token]);
+
   const onChangeHandler = (event) => {
     const name = event.target.name;
     const value = event.target.value;
     setData(d => ({ ...d, [name]: value }));
+    // Deselect saved address if they edit the form manually
+    if (["street", "city", "state", "zipcode", "country"].includes(name)) {
+      setSelectedAddressId(null);
+    }
+  };
+
+  const handleSelectAddress = (addr) => {
+    setSelectedAddressId(addr._id);
+    setData(d => ({
+      ...d,
+      street: addr.street || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      zipcode: addr.zip || "",
+      country: addr.country || "",
+    }));
   };
 
   const placeOrder = async (event) => {
     event.preventDefault();
     setLoading(true);
     const orderItems = [];
-    food_list.map((item) => {
+    food_list.forEach((item) => {
       if (cartItems[item._id] > 0) {
-        let itemInfo = item;
+        let itemInfo = { ...item };
         itemInfo["quantity"] = cartItems[item._id];
         orderItems.push(itemInfo);
       }
     });
+
     const orderData = {
       address: data,
       items: orderItems,
-      amount: getTotalCartAmount() + 2,
+      amount: getTotalCartAmount() + 2, // Subtotal + $2 delivery fee
     };
+
     try {
       const response = await axios.post(url + "/api/order/place", orderData, { headers: { token } });
       if (response.data.success) {
@@ -48,224 +111,319 @@ const PlaceOrder = () => {
         alert("Error placing order");
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       alert("Something went wrong. Please try again");
     } finally {
       setLoading(false);
     }
   };
 
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!token) navigate("/cart");
-    else if (getTotalCartAmount() === 0) navigate("/cart");
-  }, [token]);
-
   const cartFoods = food_list.filter(item => cartItems[item._id] > 0);
   const subtotal = getTotalCartAmount();
   const total = subtotal + 2;
 
-  const inputCls = "w-full px-4 py-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-orange-300 focus:bg-white transition-all duration-200";
-
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
+      
+      {/* ── Page Header & Progress ── */}
       <div className="bg-white border-b border-slate-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Container className="py-6">
           <div className="flex items-center gap-3 mb-6">
-            <button onClick={() => navigate("/cart")}
-              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
-              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+            <button 
+              onClick={() => navigate("/cart")}
+              className="w-11 h-11 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors border border-slate-100"
+              aria-label="Back to cart"
+            >
+              <FiArrowLeft size={18} className="text-slate-600" />
             </button>
-            <h1 className="font-display text-2xl font-bold text-slate-900">Checkout</h1>
+            <h1 className="font-poppins font-extrabold text-2xl text-slate-900 tracking-tight">Checkout</h1>
           </div>
 
-          {/* Steps */}
-          <div className="flex items-center gap-0">
+          {/* Stepper Progress bar */}
+          <div className="flex items-center gap-0 max-w-lg">
             {steps.map((step, i) => (
               <React.Fragment key={step.num}>
-                <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
-                    step.num === 1 ? 'bg-orange-500 text-white shadow-orange' : 'bg-slate-100 text-slate-400'
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                    step.active 
+                      ? 'bg-emerald-500 text-white shadow-emerald' 
+                      : 'bg-slate-100 text-slate-400'
                   }`}>
-                    {step.num === 1 ? step.num : (
-                      step.num < 1 ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : step.num
-                    )}
+                    {step.num}
                   </div>
-                  <span className={`text-sm font-medium ${step.num === 1 ? 'text-orange-500' : 'text-slate-400'}`}>
+                  <span className={`text-xs font-bold uppercase tracking-wider ${
+                    step.active ? 'text-emerald-600' : 'text-slate-400'
+                  }`}>
                     {step.label}
                   </span>
                 </div>
                 {i < steps.length - 1 && (
-                  <div className="flex-1 h-px bg-slate-200 mx-4" />
+                  <div className="flex-1 h-0.5 bg-slate-150 mx-4" />
                 )}
               </React.Fragment>
             ))}
           </div>
-        </div>
+        </Container>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={placeOrder} className="flex flex-col xl:flex-row gap-8 items-start">
-          {/* Left — Delivery Info */}
+      {/* ── Main Form Area ── */}
+      <Container className="py-8">
+        <form onSubmit={placeOrder} className="flex flex-col lg:flex-row gap-8 items-start">
+          
+          {/* Left Column — Saved Addresses & Delivery Inputs */}
           <div className="flex-1 w-full space-y-6">
-            {/* Delivery Info Card */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+            
+            {/* Saved Addresses Selector */}
+            {addresses.length > 0 && (
+              <Card variant="default" radius="2xl" padding="md" className="border border-slate-100/80 shadow-sm">
+                <h3 className="font-poppins font-bold text-sm text-slate-805 mb-4 flex items-center gap-2">
+                  <FiMapPin className="text-emerald-500" />
+                  <span>Choose from Saved Addresses</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {addresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr._id;
+                    return (
+                      <div
+                        key={addr._id}
+                        onClick={() => handleSelectAddress(addr)}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 relative ${
+                          isSelected 
+                            ? 'border-emerald-500 bg-emerald-50/20' 
+                            : 'border-slate-100 hover:border-slate-200 bg-slate-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-2xs font-extrabold uppercase tracking-widest text-slate-450 bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded">
+                            {addr.label || "Home"}
+                          </span>
+                          {isSelected && (
+                            <span className="text-emerald-500">
+                              <FiCheck size={16} strokeWidth={3} />
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-semibold text-slate-700 truncate">{addr.street}</p>
+                        <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                          {addr.city}, {addr.state} {addr.zip}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+            {/* Manual Delivery Form Inputs */}
+            <Card variant="default" radius="2xl" padding="lg" className="border border-slate-100/80 shadow-sm">
+              <div className="flex items-center gap-3 mb-6 border-b border-slate-50 pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <FiMapPin className="text-emerald-600" size={18} />
                 </div>
                 <div>
-                  <h2 className="font-display font-bold text-slate-900 text-lg">Delivery Address</h2>
-                  <p className="text-xs text-slate-400">Where should we deliver your order?</p>
+                  <h2 className="font-poppins font-bold text-base text-slate-900 leading-tight">Delivery Address</h2>
+                  <p className="text-xs text-slate-400">Please confirm your destination address details.</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">First Name *</label>
-                  <input required type="text" name="firstName" onChange={onChangeHandler} value={data.firstName} placeholder="John" className={inputCls} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Last Name *</label>
-                  <input required type="text" name="lastName" onChange={onChangeHandler} value={data.lastName} placeholder="Doe" className={inputCls} />
+                <Input
+                  label="First Name"
+                  required
+                  type="text"
+                  name="firstName"
+                  onChange={onChangeHandler}
+                  value={data.firstName}
+                  placeholder="e.g. John"
+                />
+                <Input
+                  label="Last Name"
+                  required
+                  type="text"
+                  name="lastName"
+                  onChange={onChangeHandler}
+                  value={data.lastName}
+                  placeholder="e.g. Doe"
+                />
+                <div className="sm:col-span-2">
+                  <Input
+                    label="Email Address"
+                    required
+                    type="email"
+                    name="email"
+                    onChange={onChangeHandler}
+                    value={data.email}
+                    placeholder="e.g. john.doe@example.com"
+                  />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email Address *</label>
-                  <input required type="email" name="email" onChange={onChangeHandler} value={data.email} placeholder="john@example.com" className={inputCls} />
+                  <Input
+                    label="Street Address"
+                    required
+                    type="text"
+                    name="street"
+                    onChange={onChangeHandler}
+                    value={data.street}
+                    placeholder="e.g. 123 Main St, Apt 4B"
+                  />
                 </div>
+                <Input
+                  label="City"
+                  required
+                  type="text"
+                  name="city"
+                  onChange={onChangeHandler}
+                  value={data.city}
+                  placeholder="e.g. New York"
+                />
+                <Input
+                  label="State"
+                  required
+                  type="text"
+                  name="state"
+                  onChange={onChangeHandler}
+                  value={data.state}
+                  placeholder="e.g. NY"
+                />
+                <Input
+                  label="Zip Code"
+                  required
+                  type="text"
+                  name="zipcode"
+                  onChange={onChangeHandler}
+                  value={data.zipcode}
+                  placeholder="e.g. 10001"
+                />
+                <Input
+                  label="Country"
+                  required
+                  type="text"
+                  name="country"
+                  onChange={onChangeHandler}
+                  value={data.country}
+                  placeholder="e.g. United States"
+                />
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Street Address *</label>
-                  <input required type="text" name="street" onChange={onChangeHandler} value={data.street} placeholder="123 Main Street, Apt 4B" className={inputCls} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">City *</label>
-                  <input required type="text" name="city" onChange={onChangeHandler} value={data.city} placeholder="New York" className={inputCls} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">State *</label>
-                  <input required type="text" name="state" onChange={onChangeHandler} value={data.state} placeholder="NY" className={inputCls} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Zip Code *</label>
-                  <input required type="text" name="zipcode" onChange={onChangeHandler} value={data.zipcode} placeholder="10001" className={inputCls} />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Country *</label>
-                  <input required type="text" name="country" onChange={onChangeHandler} value={data.country} placeholder="United States" className={inputCls} />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number *</label>
-                  <input required type="text" name="phone" onChange={onChangeHandler} value={data.phone} placeholder="+1 (555) 000-0000" className={inputCls} />
+                  <Input
+                    label="Phone Number"
+                    required
+                    type="text"
+                    name="phone"
+                    onChange={onChangeHandler}
+                    value={data.phone}
+                    placeholder="e.g. +1 (555) 000-0000"
+                  />
                 </div>
               </div>
-            </div>
+            </Card>
 
-            {/* Delivery Options */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-              <h3 className="font-display font-bold text-slate-900 mb-4">Delivery Speed</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Delivery Speed / Option block */}
+            <Card variant="default" radius="2xl" padding="md" className="border border-slate-100/80 shadow-sm">
+              <h3 className="font-poppins font-bold text-slate-805 text-sm mb-4 flex items-center gap-2">
+                <FiTruck className="text-emerald-500" />
+                <span>Delivery Method</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {[
-                  { icon: "⚡", title: "Express Delivery", time: "20–30 min", price: "$2.00", checked: true },
-                  { icon: "🚶", title: "Standard Delivery", time: "45–60 min", price: "Free", checked: false },
+                  { title: "Express Courier", time: "20–30 mins speed", price: "$2.00", checked: true },
+                  { title: "Standard Delivery", time: "45–60 mins speed", price: "Free", checked: false },
                 ].map((opt, i) => (
-                  <label key={i} className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                    opt.checked ? 'border-orange-300 bg-orange-50' : 'border-slate-100 hover:border-slate-200'
-                  }`}>
-                    <input type="radio" name="delivery" defaultChecked={opt.checked} className="sr-only" />
-                    <span className="text-2xl">{opt.icon}</span>
+                  <div 
+                    key={i} 
+                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 ${
+                      opt.checked 
+                        ? 'border-emerald-500 bg-emerald-50/20' 
+                        : 'border-slate-100 bg-slate-50/50'
+                    }`}
+                  >
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-slate-900">{opt.title}</p>
-                      <p className="text-xs text-slate-400">{opt.time}</p>
+                      <p className="text-xs font-bold text-slate-750">{opt.title}</p>
+                      <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{opt.time}</p>
                     </div>
-                    <span className={`text-sm font-bold ${opt.checked ? 'text-orange-500' : 'text-emerald-500'}`}>
+                    <span className="text-xs font-extrabold text-emerald-600">
                       {opt.price}
                     </span>
-                  </label>
+                  </div>
                 ))}
               </div>
-            </div>
+            </Card>
           </div>
 
-          {/* Right — Summary */}
-          <div className="w-full xl:w-[400px] flex-shrink-0 sticky top-24 space-y-4">
-            {/* Order summary */}
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-card overflow-hidden">
+          {/* Right Column — Summary & Checkout actions */}
+          <div className="w-full lg:w-[400px] flex-shrink-0 lg:sticky lg:top-24 space-y-4">
+            <Card variant="default" radius="3xl" padding="none" className="border border-slate-100 shadow-card overflow-hidden">
               <div className="px-6 pt-6 pb-4 border-b border-slate-50">
-                <h3 className="font-display font-bold text-xl text-slate-900">Your Order</h3>
-                <p className="text-xs text-slate-400 mt-1">{cartFoods.length} items</p>
+                <h3 className="font-poppins font-extrabold text-base text-slate-900 uppercase tracking-wide">Summary</h3>
+                <p className="text-xs text-slate-450 font-bold uppercase mt-1">{cartFoods.length} selected items</p>
               </div>
 
-              <div className="px-6 py-4 space-y-3 max-h-48 overflow-y-auto scrollbar-hide">
+              {/* Items overview scroll */}
+              <div className="px-6 py-4 space-y-3.5 max-h-48 overflow-y-auto scrollbar-hide">
                 {cartFoods.map((item) => (
                   <div key={item._id} className="flex items-center gap-3">
-                    <img src={`${url}/images/${item.image}`} alt={item.name}
-                      className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                    <img 
+                      src={`${url}/images/${item.image}`} 
+                      alt={item.name} 
+                      className="w-10 h-10 rounded-xl object-cover flex-shrink-0 bg-slate-50 border border-slate-100/10" 
+                    />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{item.name}</p>
-                      <p className="text-xs text-slate-400">×{cartItems[item._id]}</p>
+                      <p className="text-xs font-bold text-slate-750 truncate">{item.name}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Qty: {cartItems[item._id]}</p>
                     </div>
-                    <span className="text-sm font-bold text-slate-900 flex-shrink-0">
+                    <span className="text-xs font-bold text-slate-800 flex-shrink-0">
                       ${(item.price * cartItems[item._id]).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <div className="px-6 py-4 space-y-2.5 border-t border-slate-50">
-                <div className="flex justify-between text-sm text-slate-500">
+              {/* pricing details */}
+              <div className="px-6 py-4 space-y-3.5 border-t border-slate-50 text-xs">
+                <div className="flex justify-between font-bold text-slate-450 uppercase tracking-wider">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-slate-900">${subtotal.toFixed(2)}</span>
+                  <span className="text-slate-800">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-slate-500">
-                  <span>Delivery</span>
-                  <span className="font-semibold text-slate-900">$2.00</span>
+                <div className="flex justify-between font-bold text-slate-450 uppercase tracking-wider">
+                  <span>Delivery fee</span>
+                  <span className="text-slate-800">$2.00</span>
                 </div>
               </div>
 
-              <div className="px-6 py-4 bg-slate-50">
+              {/* CTA payment triggers */}
+              <div className="px-6 py-5 bg-slate-50">
                 <div className="flex justify-between items-center mb-5">
-                  <span className="font-display font-bold text-lg text-slate-900">Total</span>
-                  <span className="font-display font-bold text-2xl text-orange-500">${total.toFixed(2)}</span>
+                  <span className="font-poppins font-extrabold text-base text-slate-900 uppercase tracking-wider">Checkout Total</span>
+                  <span className="font-poppins font-extrabold text-2xl text-emerald-650">${total.toFixed(2)}</span>
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 btn-primary text-white font-bold rounded-2xl shadow-orange text-sm flex items-center justify-center gap-2.5 disabled:opacity-60"
+                  variant="primary"
+                  size="lg"
+                  className="w-full font-bold shadow-emerald-lg h-12.5 text-sm flex items-center justify-center gap-2"
                 >
                   {loading ? (
-                    <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Processing...</>
+                    <>Processing...</>
                   ) : (
                     <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
+                      <FiLock size={15} strokeWidth={2.5} />
                       Pay ${total.toFixed(2)}
                     </>
                   )}
-                </button>
+                </Button>
 
-                <div className="flex items-center justify-center gap-2 mt-3">
-                  <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                  <span className="text-xs text-slate-400 font-medium">256-bit SSL encryption · Secured by Stripe</span>
+                {/* secure checkout guarantee */}
+                <div className="flex items-center justify-center gap-1.5 mt-4 text-slate-400">
+                  <FiLock size={12} className="text-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-center">Secured Stripe checkout</span>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
+
         </form>
-      </div>
+      </Container>
     </div>
   );
 };

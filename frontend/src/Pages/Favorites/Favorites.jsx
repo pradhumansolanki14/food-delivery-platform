@@ -1,61 +1,67 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
-import { StoreContext } from '../../context/StoreContext'
-import FoodItem from '../../components/FoodItem/FoodItem'
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { FiArrowLeft, FiHeart, FiShoppingBag, FiInfo } from 'react-icons/fi';
+import { StoreContext } from '../../context/StoreContext';
+import FoodItem from '../../components/FoodItem/FoodItem';
+import { Container, Button, Card } from '../../components/ui';
 
 const Favorites = () => {
-  const { url, token, favorites } = useContext(StoreContext)
-  const [favFoods, setFavFoods] = useState([])
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
+  const { url, token, favorites } = useContext(StoreContext);
+  const [favFoods, setFavFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) { navigate('/'); return }
-    fetchFavorites()
-  }, [token, favorites]) // re-fetch whenever favorites list changes
+    if (!token) { navigate('/'); return; }
+    fetchFavorites();
+  }, [token, favorites]); // re-fetch whenever favorites list changes
 
   const fetchFavorites = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await axios.get(`${url}/api/favorites`, { headers: { token } })
-      if (res.data.success) setFavFoods(res.data.data)
-    } catch (e) { console.log(e) }
-    setLoading(false)
-  }
+      const res = await axios.get(`${url}/api/favorites`, { headers: { token } });
+      if (res.data.success) {
+        setFavFoods(res.data.data);
+      }
+    } catch (e) { 
+      console.error(e); 
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Page header */}
+      
+      {/* ── Page Header ── */}
       <div className="bg-white border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Container className="py-8">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+              className="w-11 h-11 rounded-2xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors border border-slate-100"
+              aria-label="Go back"
             >
-              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              <FiArrowLeft size={18} className="text-slate-650" />
             </button>
             <div>
-              <h1 className="font-display text-2xl font-bold text-slate-900 flex items-center gap-2">
-                My Favorites
-                <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+              <h1 className="font-poppins font-extrabold text-2xl text-slate-900 flex items-center gap-2 tracking-tight">
+                <span>My Favorites</span>
+                <FiHeart className="text-rose-500 fill-rose-500 animate-pulse" size={20} />
               </h1>
-              <p className="text-slate-400 text-sm mt-0.5">
+              <p className="text-slate-400 text-xs font-semibold mt-0.5">
                 {loading ? 'Loading...' : `${favFoods.length} saved item${favFoods.length !== 1 ? 's' : ''}`}
               </p>
             </div>
           </div>
-        </div>
+        </Container>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* ── Grid List Content ── */}
+      <Container className="py-8">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          /* Pulse Skeletal Loader */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="bg-white rounded-3xl border border-slate-100 overflow-hidden animate-pulse">
                 <div className="h-48 bg-slate-200" />
@@ -68,38 +74,34 @@ const Favorites = () => {
             ))}
           </div>
         ) : favFoods.length === 0 ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-28">
-            <div className="w-28 h-28 rounded-4xl bg-red-50 flex items-center justify-center mb-6" style={{ fontSize: '64px' }}>
-              🤍
+          /* Empty Favorites list state */
+          <div className="flex flex-col items-center justify-center py-20 text-center max-w-sm mx-auto bg-white border border-slate-100 rounded-3xl shadow-card p-8">
+            <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 mb-5">
+              <FiHeart size={28} className="fill-rose-500/10" />
             </div>
-            <h2 className="font-display text-2xl font-bold text-slate-900 mb-2">No favorites yet</h2>
-            <p className="text-slate-400 text-sm text-center max-w-xs mb-8">
-              Tap the ❤️ on any dish to save it here for quick access later.
-            </p>
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 px-8 py-4 btn-primary text-white font-bold rounded-2xl shadow-orange text-sm"
+            <h2 className="font-poppins font-bold text-slate-800 text-lg mb-2">No favorites yet</h2>
+            <p className="text-slate-400 text-xs font-semibold leading-relaxed mb-6">Tap the heart icon on any gourmet dish to save it here for quick access later.</p>
+            <Button 
+              onClick={() => navigate('/')} 
+              variant="primary" 
+              size="lg"
+              className="font-bold shadow-emerald-lg w-full"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
-              </svg>
               Explore Menu
-            </button>
+            </Button>
           </div>
         ) : (
           <>
-            {/* Hint */}
-            <div className="flex items-center gap-2.5 p-4 bg-red-50 border border-red-100 rounded-2xl mb-6">
-              <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <p className="text-xs text-red-600 font-medium">
-                Tap the ❤️ on any card to remove it from favorites
+            {/* Quick helper tip banner */}
+            <div className="flex items-center gap-2.5 p-3.5 bg-rose-50 border border-rose-100/50 rounded-2xl mb-6 max-w-md animate-fadeUp">
+              <FiInfo className="text-rose-550 flex-shrink-0" size={15} />
+              <p className="text-[10px] text-rose-700 font-bold uppercase tracking-wider">
+                Tap the red heart on any card to remove it from favorites
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
+            {/* Grid List */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-6 animate-fadeUp">
               {favFoods.map(item => (
                 <FoodItem
                   key={item._id}
@@ -113,9 +115,9 @@ const Favorites = () => {
             </div>
           </>
         )}
-      </div>
+      </Container>
     </div>
-  )
-}
+  );
+};
 
-export default Favorites
+export default Favorites;

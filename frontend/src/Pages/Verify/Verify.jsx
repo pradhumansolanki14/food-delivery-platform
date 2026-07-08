@@ -1,7 +1,9 @@
 import React, { useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { FiLock } from 'react-icons/fi';
 import { StoreContext } from '../../context/StoreContext';
+import { Card } from '../../components/ui';
 
 const Verify = () => {
   const [searchParams] = useSearchParams();
@@ -13,8 +15,11 @@ const Verify = () => {
   const verifyPayment = async () => {
     try {
       const response = await axios.post(url + "/api/order/verify", { success, sessionId });
-      if (response.data.success) navigate("/order-success");
-      else navigate("/");
+      if (response.data.success) {
+        navigate("/order-success");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       console.error("Verification failed:", err);
       navigate("/");
@@ -27,25 +32,35 @@ const Verify = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6 px-4">
-      <div className="bg-white rounded-4xl shadow-card border border-slate-100 p-12 flex flex-col items-center gap-6 max-w-sm w-full">
-        <div className="relative w-20 h-20">
-          <div className="absolute inset-0 rounded-full border-4 border-slate-100"/>
-          <div className="absolute inset-0 rounded-full border-4 border-transparent" style={{ borderTopColor: '#f97316', animation: 'rotate 0.8s linear infinite' }}/>
-          <div className="absolute inset-3 rounded-full bg-orange-50 flex items-center justify-center">
-            <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
+      <Card 
+        variant="default" 
+        radius="3xl" 
+        padding="lg" 
+        className="shadow-card border border-slate-100 flex flex-col items-center gap-6 max-w-sm w-full p-8 sm:p-10 text-center"
+      >
+        {/* Animated Custom circular loader */}
+        <div className="relative w-18 h-18">
+          <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin" />
+          <div className="absolute inset-2.5 rounded-full bg-emerald-50 flex items-center justify-center">
+            <FiLock className="text-emerald-500" size={20} />
           </div>
         </div>
-        <div className="text-center">
-          <h2 className="font-display text-xl font-bold text-slate-900 mb-1">Verifying Payment</h2>
-          <p className="text-sm text-slate-400">Confirming your order with Stripe...</p>
+
+        <div>
+          <h2 className="font-poppins font-extrabold text-lg text-slate-900 leading-tight">Verifying Payment</h2>
+          <p className="text-xs text-slate-400 font-semibold mt-1">Securing your order transaction with Stripe...</p>
         </div>
+
+        {/* Pulse indicator line */}
         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full animate-pulse" style={{ width: '60%' }}/>
+          <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full animate-pulse w-2/3" />
         </div>
-        <p className="text-xs text-slate-300 text-center">Please don&apos;t close this window</p>
-      </div>
+
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          Please do not refresh or close this window.
+        </p>
+      </Card>
     </div>
   );
 };
