@@ -15,6 +15,66 @@ const DEFAULT_FORM = {
   restaurantName: '', description: '', cuisine: '', address: '', phone: '',
 };
 
+/* ────────────────────────────────────────────────────────────
+   Field — defined OUTSIDE BecomePartnerModal so React never
+   unmounts/remounts it on parent re-renders (which would
+   cause the focused input to lose focus on every keystroke).
+──────────────────────────────────────────────────────────── */
+const Field = ({ label, name, type = 'text', placeholder, icon, required, rows, form, fieldErrors, onChange, firstInputRef, isFirstField }) => {
+  const err = fieldErrors[name];
+  const baseClass = [
+    'w-full px-4 py-3 pl-10 rounded-xl border-2 bg-slate-50/80',
+    'text-sm font-medium text-slate-900 placeholder-slate-400',
+    'outline-none transition-all duration-200',
+    err
+      ? 'border-rose-300 focus:border-rose-400 bg-rose-50/30'
+      : 'border-slate-200 focus:border-emerald-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]',
+  ].join(' ');
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">
+        {label}{required && <span className="text-rose-400 ml-0.5">*</span>}
+      </label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center">
+          {icon}
+        </span>
+        {rows ? (
+          <textarea
+            name={name}
+            value={form[name]}
+            onChange={onChange}
+            placeholder={placeholder}
+            rows={rows}
+            className={`${baseClass} resize-none pt-3`}
+          />
+        ) : (
+          <input
+            ref={isFirstField ? firstInputRef : undefined}
+            name={name}
+            type={type}
+            value={form[name]}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            className={baseClass}
+            autoComplete={type === 'password' ? 'new-password' : 'off'}
+          />
+        )}
+      </div>
+      {err && (
+        <p className="flex items-center gap-1 text-xs text-rose-500 font-semibold">
+          <FiAlertCircle size={11} /> {err}
+        </p>
+      )}
+    </div>
+  );
+};
+
+/* ════════════════════════════════════════════════════════════
+   BecomePartnerModal
+════════════════════════════════════════════════════════════ */
 const BecomePartnerModal = ({ isOpen, onClose }) => {
   const { url } = useContext(StoreContext);
   const [step, setStep] = useState(0);
@@ -25,7 +85,7 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
   const [fieldErrors, setFieldErrors] = useState({});
   const firstInputRef = useRef(null);
 
-  // Reset state when modal opens
+  // Reset + auto-focus when modal opens
   useEffect(() => {
     if (isOpen) {
       setStep(0);
@@ -34,34 +94,35 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
       setFieldErrors({});
       setSubmitted(false);
       setLoading(false);
-      setTimeout(() => firstInputRef.current?.focus(), 100);
+      setTimeout(() => firstInputRef.current?.focus(), 120);
     }
   }, [isOpen]);
 
-  // Trap focus / close on Escape
+  // Close on Escape
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
-  const handle = (e) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-    setFieldErrors((f) => ({ ...f, [e.target.name]: '' }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+    setFieldErrors((f) => ({ ...f, [name]: '' }));
     setError('');
   };
 
-  /* ── Validate each step ─────────────────────────────────────── */
-  const validateStep = () => {
+  /* ── Validation ── */
+  const validateStep = (currentStep) => {
     const errs = {};
-    if (step === 0) {
+    if (currentStep === 0) {
       if (!form.name.trim())             errs.name     = 'Full name is required';
       if (!form.email.trim())            errs.email    = 'Email is required';
       else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Valid email required';
       if (!form.password)                errs.password = 'Password is required';
       else if (form.password.length < 8) errs.password = 'Must be at least 8 characters';
     }
-    if (step === 1) {
+    if (currentStep === 1) {
       if (!form.restaurantName.trim()) errs.restaurantName = 'Restaurant name is required';
       if (!form.address.trim())        errs.address        = 'Address is required';
     }
@@ -70,7 +131,7 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
   };
 
   const nextStep = () => {
-    if (validateStep()) setStep((s) => Math.min(s + 1, 2));
+    if (validateStep(step)) setStep((s) => Math.min(s + 1, 2));
   };
 
   const prevStep = () => {
@@ -78,10 +139,10 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
     setStep((s) => Math.max(s - 1, 0));
   };
 
-  /* ── Submit ──────────────────────────────────────────────────── */
+  /* ── Submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep()) return;
+    if (!validateStep(step)) return;
     setLoading(true);
     setError('');
     try {
@@ -110,99 +171,49 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
     setLoading(false);
   };
 
-  /* ── Field component ─────────────────────────────────────────── */
-  const Field = ({ label, name, type = 'text', placeholder, icon, required, rows }) => {
-    const err = fieldErrors[name];
-    const baseClass = `w-full px-4 ${rows ? 'py-3' : 'py-3'} pl-10 rounded-xl border-2 bg-slate-50/80 text-sm font-medium text-slate-900 placeholder-slate-400 outline-none transition-all duration-200 ${
-      err
-        ? 'border-rose-300 focus:border-rose-400 bg-rose-50/30'
-        : 'border-slate-200 focus:border-emerald-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]'
-    }`;
+  /* ── Step content ── */
+  const fieldProps = { form, fieldErrors, onChange: handleChange, firstInputRef };
 
-    return (
-      <div className="space-y-1.5">
-        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">
-          {label}{required && <span className="text-rose-400 ml-0.5">*</span>}
-        </label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center">
-            {icon}
-          </span>
-          {rows ? (
-            <textarea
-              name={name}
-              value={form[name]}
-              onChange={handle}
-              placeholder={placeholder}
-              rows={rows}
-              className={`${baseClass} resize-none`}
-              style={{ paddingTop: '12px' }}
-            />
-          ) : (
-            <input
-              ref={name === 'name' && step === 0 ? firstInputRef : undefined}
-              name={name}
-              type={type}
-              value={form[name]}
-              onChange={handle}
-              placeholder={placeholder}
-              required={required}
-              className={baseClass}
-              autoComplete={type === 'password' ? 'new-password' : 'off'}
-            />
-          )}
-        </div>
-        {err && (
-          <p className="flex items-center gap-1 text-xs text-rose-500 font-semibold">
-            <FiAlertCircle size={11} /> {err}
-          </p>
-        )}
-      </div>
-    );
-  };
-
-  /* ── Step content ────────────────────────────────────────────── */
   const renderStep = () => {
     if (step === 0) return (
       <div className="space-y-4">
-        <Field label="Full Name" name="name" placeholder="John Doe" icon={<FiUser size={14} />} required />
-        <Field label="Email Address" name="email" type="email" placeholder="you@restaurant.com" icon={<FiMail size={14} />} required />
-        <Field label="Password" name="password" type="password" placeholder="Min 8 characters" icon={<FiLock size={14} />} required />
+        <Field {...fieldProps} isFirstField label="Full Name" name="name" placeholder="John Doe" icon={<FiUser size={14} />} required />
+        <Field {...fieldProps} label="Email Address" name="email" type="email" placeholder="you@restaurant.com" icon={<FiMail size={14} />} required />
+        <Field {...fieldProps} label="Password" name="password" type="password" placeholder="Min 8 characters" icon={<FiLock size={14} />} required />
       </div>
     );
 
     if (step === 1) return (
       <div className="space-y-4">
-        <Field label="Restaurant Name" name="restaurantName" placeholder="e.g. The Green Garden" icon={<FiGrid size={14} />} required />
-        <Field label="Description" name="description" placeholder="Brief description of your restaurant…" icon={<FiStar size={14} />} rows={3} />
+        <Field {...fieldProps} isFirstField label="Restaurant Name" name="restaurantName" placeholder="e.g. The Green Garden" icon={<FiGrid size={14} />} required />
+        <Field {...fieldProps} label="Description" name="description" placeholder="Brief description of your restaurant…" icon={<FiStar size={14} />} rows={3} />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Cuisine" name="cuisine" placeholder="e.g. Italian" icon={<FiStar size={14} />} />
-          <Field label="Phone" name="phone" placeholder="Contact number" icon={<FiPhone size={14} />} />
+          <Field {...fieldProps} label="Cuisine" name="cuisine" placeholder="e.g. Italian" icon={<FiStar size={14} />} />
+          <Field {...fieldProps} label="Phone" name="phone" placeholder="Contact number" icon={<FiPhone size={14} />} />
         </div>
-        <Field label="Address" name="address" placeholder="Full restaurant address" icon={<FiMapPin size={14} />} required />
+        <Field {...fieldProps} label="Address" name="address" placeholder="Full restaurant address" icon={<FiMapPin size={14} />} required />
       </div>
     );
 
     if (step === 2) return (
       <div className="space-y-3">
-        {/* Review summary */}
         {[
-          { label: 'Your Name', value: form.name },
-          { label: 'Email', value: form.email },
+          { label: 'Your Name',  value: form.name },
+          { label: 'Email',      value: form.email },
           { label: 'Restaurant', value: form.restaurantName },
-          { label: 'Cuisine', value: form.cuisine || '—' },
-          { label: 'Phone', value: form.phone || '—' },
-          { label: 'Address', value: form.address },
+          { label: 'Cuisine',    value: form.cuisine || '—' },
+          { label: 'Phone',      value: form.phone   || '—' },
+          { label: 'Address',    value: form.address },
         ].map((row) => (
           <div key={row.label} className="flex items-start justify-between gap-4 py-2.5 border-b border-slate-100 last:border-0">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest w-28 flex-shrink-0">{row.label}</span>
-            <span className="text-sm font-semibold text-slate-800 text-right truncate">{row.value}</span>
+            <span className="text-sm font-semibold text-slate-800 text-right">{row.value}</span>
           </div>
         ))}
 
         <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
           <p className="text-xs font-semibold text-amber-700 leading-relaxed">
-            Your registration will be reviewed by the Tomato team. You will receive an email once your restaurant has been approved. This typically takes 1-2 business days.
+            Your registration will be reviewed by the Tomato team. You will receive an email once your restaurant has been approved. This typically takes 1–2 business days.
           </p>
         </div>
 
@@ -235,7 +246,7 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
           onClick={onClose}
         />
 
-        {/* Modal */}
+        {/* Modal card */}
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -244,10 +255,10 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
           className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[92vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top accent bar */}
+          {/* Top accent */}
           <div className="h-1 w-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-500 flex-shrink-0" />
 
-          {/* Success state */}
+          {/* ── Success state ── */}
           {submitted ? (
             <div className="flex flex-col items-center justify-center p-10 text-center gap-4">
               <motion.div
@@ -261,7 +272,9 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
               <div>
                 <h2 className="font-poppins font-extrabold text-2xl text-slate-900 mb-2">Application Submitted!</h2>
                 <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
-                  Your restaurant registration has been submitted. Our team will review your application and reach out to <span className="font-semibold text-slate-700">{form.email}</span> within 1-2 business days.
+                  Our team will review your application and reach out to{' '}
+                  <span className="font-semibold text-slate-700">{form.email}</span>{' '}
+                  within 1–2 business days.
                 </p>
               </div>
               <button
@@ -273,7 +286,7 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <>
-              {/* Header */}
+              {/* ── Header ── */}
               <div className="flex items-center justify-between px-7 pt-7 pb-5 flex-shrink-0">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -298,7 +311,7 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
                 </button>
               </div>
 
-              {/* Step indicator */}
+              {/* ── Step indicator ── */}
               <div className="flex items-center gap-2 px-7 pb-5 flex-shrink-0">
                 {STEPS.map((s, i) => (
                   <React.Fragment key={s}>
@@ -323,9 +336,9 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
                 ))}
               </div>
 
-              {/* Scrollable form area */}
+              {/* ── Scrollable form ── */}
               <div className="flex-1 overflow-y-auto">
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                   <div className="px-7 pb-2">
                     <AnimatePresence mode="wait">
                       <motion.div
@@ -333,20 +346,20 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.18 }}
                       >
                         {renderStep()}
                       </motion.div>
                     </AnimatePresence>
                   </div>
 
-                  {/* Footer actions */}
+                  {/* ── Footer ── */}
                   <div className="sticky bottom-0 bg-white border-t border-slate-100 px-7 py-5 flex items-center justify-between gap-3 mt-4">
                     {step > 0 ? (
                       <button
                         type="button"
                         onClick={prevStep}
-                        className="px-5 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                        className="px-5 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
                       >
                         Back
                       </button>
@@ -358,7 +371,7 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
                       <button
                         type="button"
                         onClick={nextStep}
-                        className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-emerald-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+                        className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-emerald-sm transition-all"
                       >
                         Continue
                         <FiChevronRight size={15} />
@@ -367,7 +380,7 @@ const BecomePartnerModal = ({ isOpen, onClose }) => {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-7 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-emerald-sm transition-all disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+                        className="flex items-center gap-2 px-7 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-emerald-sm transition-all disabled:opacity-60"
                       >
                         {loading ? (
                           <>

@@ -9,7 +9,6 @@ import Footer from './components/Footer/Footer'
 // ── Modals / Overlays ─────────────────────────────────────────
 import LoginPopup from './components/LoginPopup/LoginPopup'
 import CartConflictModal from './components/CartConflictModal/CartConflictModal'
-import BecomePartnerModal from './components/BecomePartnerModal/BecomePartnerModal'
 
 // ── Pages ─────────────────────────────────────────────────────
 import Home from './Pages/Home/Home'
@@ -29,10 +28,10 @@ import ContactPage from './Pages/ContactPage/ContactPage'
 import OrderDetail from './Pages/OrderDetail/OrderDetail'
 import RestaurantsPage from './Pages/Restaurants/RestaurantsPage'
 import RestaurantDetail from './Pages/RestaurantDetail/RestaurantDetail'
+import BecomePartnerPage from './Pages/BecomePartner/BecomePartnerPage'
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false)
-  const [showPartnerModal, setShowPartnerModal] = useState(false)
 
   return (
     <div className="min-h-screen bg-white">
@@ -88,14 +87,11 @@ const App = () => {
       {/* ── Auth Modal ────────────────────────────────────────── */}
       {showLogin && <LoginPopup setShowLogin={setShowLogin} />}
 
-      {/* ── Vendor Registration Modal ─────────────────────────── */}
-      <BecomePartnerModal isOpen={showPartnerModal} onClose={() => setShowPartnerModal(false)} />
-
       {/* ── Cart Conflict Guard ───────────────────────────────── */}
       <CartConflictModal />
 
       {/* ── Navigation ───────────────────────────────────────── */}
-      <Navbar setShowLogin={setShowLogin} setShowPartnerModal={setShowPartnerModal} />
+      <Navbar setShowLogin={setShowLogin} />
 
       {/* ── Routes ───────────────────────────────────────────── */}
       <Routes>
@@ -122,6 +118,9 @@ const App = () => {
         {/* Restaurant listing + detail */}
         <Route path='/restaurants' element={<RestaurantsPage />} />
         <Route path='/restaurant/:id' element={<RestaurantDetail />} />
+
+        {/* Vendor / Partner registration */}
+        <Route path='/become-a-partner' element={<BecomePartnerPage />} />
 
         {/* 404 */}
         <Route path='*' element={<NotFound />} />

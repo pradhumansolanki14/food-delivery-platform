@@ -311,7 +311,7 @@ const ProfileDropdown = ({ userName, onLogout, onNavigate }) => {
 /* ════════════════════════════════════════════════════════════
    MOBILE DRAWER
 ════════════════════════════════════════════════════════════ */
-const MobileDrawer = ({ open, onClose, token, userName, cartCount, favCount, setShowLogin, setShowPartnerModal, onLogout, navigate }) => {
+const MobileDrawer = ({ open, onClose, token, userName, cartCount, favCount, setShowLogin, onLogout, navigate }) => {
   const [mobileSearch, setMobileSearch] = useState("");
 
   const submitMobileSearch = (e) => {
@@ -401,7 +401,7 @@ const MobileDrawer = ({ open, onClose, token, userName, cartCount, favCount, set
               <div className="px-3 space-y-1">
                 <p className="px-2 pb-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Partners</p>
                 <button
-                  onClick={() => { setShowPartnerModal(true); onClose(); }}
+                  onClick={() => { navigate('/become-a-partner'); onClose(); }}
                   className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors text-left"
                 >
                   <FiStar size={15} className="text-emerald-500" />
@@ -491,7 +491,7 @@ const MobileDrawer = ({ open, onClose, token, userName, cartCount, favCount, set
 /* ════════════════════════════════════════════════════════════
    MAIN NAVBAR
 ════════════════════════════════════════════════════════════ */
-const Navbar = ({ setShowLogin, setShowPartnerModal }) => {
+const Navbar = ({ setShowLogin }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { token, setToken, cartItems, favorites, userName, url } = useContext(StoreContext);
@@ -583,7 +583,7 @@ const Navbar = ({ setShowLogin, setShowPartnerModal }) => {
               {!token && (
                 <button
                   type="button"
-                  onClick={() => setShowPartnerModal(true)}
+                  onClick={() => navigate('/become-a-partner')}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   <FiStar size={14} className="text-slate-400" />
@@ -684,7 +684,6 @@ const Navbar = ({ setShowLogin, setShowPartnerModal }) => {
         cartCount={cartCount}
         favCount={favCount}
         setShowLogin={setShowLogin}
-        setShowPartnerModal={setShowPartnerModal}
         onLogout={logout}
         navigate={navigate}
       />
