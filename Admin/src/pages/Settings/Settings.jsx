@@ -170,7 +170,7 @@ const Settings = ({ url }) => {
         {/* Status settings */}
         <Card variant="default" radius="2xl" padding="lg" className="border border-slate-100 shadow-sm space-y-4">
           <h2 className="font-poppins font-bold text-slate-850 text-sm uppercase tracking-wider pb-2 border-b border-slate-50 flex items-center gap-2">
-            🔆 Platform Storefront Status
+            <FiSettings className="text-slate-400" /> Platform Storefront Status
           </h2>
           
           <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-150/45 rounded-2xl">

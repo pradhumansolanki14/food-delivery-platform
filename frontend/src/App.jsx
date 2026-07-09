@@ -29,6 +29,7 @@ import OrderDetail from './Pages/OrderDetail/OrderDetail'
 import RestaurantsPage from './Pages/Restaurants/RestaurantsPage'
 import RestaurantDetail from './Pages/RestaurantDetail/RestaurantDetail'
 import BecomePartnerPage from './Pages/BecomePartner/BecomePartnerPage'
+import PartnerLandingPage from './Pages/PartnerLanding/PartnerLandingPage'
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false)
@@ -119,8 +120,9 @@ const App = () => {
         <Route path='/restaurants' element={<RestaurantsPage />} />
         <Route path='/restaurant/:id' element={<RestaurantDetail />} />
 
-        {/* Vendor / Partner registration */}
-        <Route path='/become-a-partner' element={<BecomePartnerPage />} />
+        {/* Partner landing page → registration funnel */}
+        <Route path='/become-a-partner' element={<PartnerLandingPage />} />
+        <Route path='/vendor-register'  element={<BecomePartnerPage />} />
 
         {/* 404 */}
         <Route path='*' element={<NotFound />} />

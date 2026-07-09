@@ -1,71 +1,120 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiUser, FiMail, FiLock, FiCheck, FiArrowRight, FiInfo } from 'react-icons/fi';
+import {
+  FiX, FiUser, FiMail, FiLock, FiArrowRight,
+  FiCheck, FiEye, FiEyeOff, FiLoader,
+  FiZap, FiShield, FiStar,
+} from 'react-icons/fi';
 import axios from 'axios';
 import { StoreContext } from '../../context/StoreContext';
 import useToast from '../../hooks/useToast';
+import { BrandLogo } from '../ui';
+import { BRAND } from '../../constants/brand';
 
+/* ─── Left-panel brand points ───────────────────────────────── */
+const BRAND_POINTS = [
+  { icon: <FiZap size={14} />,    text: 'Order from the best local restaurants' },
+  { icon: <FiStar size={14} />,   text: 'Track every order in real-time' },
+  { icon: <FiShield size={14} />, text: 'Secure, reliable delivery every time' },
+];
+
+/* ─── Reusable field ─────────────────────────────────────────── */
+const Field = ({ icon, name, type = 'text', placeholder, value, onChange, required, autoFocus }) => {
+  const [showPwd, setShowPwd] = useState(false);
+  const isPassword = type === 'password';
+
+  return (
+    <div className="relative flex items-center bg-white border border-zinc-200 rounded-xl px-3.5 py-2.5 transition-all duration-200 focus-within:border-zinc-900 focus-within:ring-2 focus-within:ring-zinc-950/6">
+      <span className="text-zinc-400 mr-2.5 flex-shrink-0">{icon}</span>
+      <input
+        name={name}
+        type={isPassword ? (showPwd ? 'text' : 'password') : type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        autoFocus={autoFocus}
+        autoComplete={isPassword ? 'current-password' : 'off'}
+        className="flex-1 bg-transparent text-xs font-semibold text-zinc-800 placeholder-zinc-400 outline-none"
+      />
+      {isPassword && (
+        <button
+          type="button"
+          onClick={() => setShowPwd(p => !p)}
+          className="text-zinc-400 hover:text-zinc-700 transition-colors ml-2 flex-shrink-0"
+          aria-label={showPwd ? 'Hide password' : 'Show password'}
+        >
+          {showPwd ? <FiEyeOff size={13} /> : <FiEye size={13} />}
+        </button>
+      )}
+    </div>
+  );
+};
+
+/* ════════════════════════════════════════════════════════════
+   LOGIN POPUP
+════════════════════════════════════════════════════════════ */
 const LoginPopup = ({ setShowLogin, initialState }) => {
   const { url, setToken } = useContext(StoreContext);
-  
-  // Map initialState string correctly: default to "Login" if not explicitly "Sign Up"
-  const defaultTab = initialState === "Sign Up" ? "Sign Up" : "Login";
+  const defaultTab = initialState === 'Sign Up' ? 'Sign Up' : 'Login';
   const [currState, setCurrState] = useState(defaultTab);
-  
-  const [data, setData] = useState({ name: "", email: "", password: "" });
-  const [agree, setAgree] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [data, setData]           = useState({ name: '', email: '', password: '' });
+  const [agree, setAgree]         = useState(false);
+  const [loading, setLoading]     = useState(false);
   const toast = useToast();
+  const cardRef = useRef(null);
 
-  // Reset fields on tab change to prevent input carryover
+  /* Reset fields on tab switch */
   useEffect(() => {
-    setData({ name: "", email: "", password: "" });
+    setData({ name: '', email: '', password: '' });
+    setAgree(false);
   }, [currState]);
 
-  const onChangeHandler = (event) => {
-    const { name, value } = event.target;
-    setData((prev) => ({ ...prev, [name]: value }));
+  /* Trap focus inside modal */
+  useEffect(() => {
+    const prev = document.activeElement;
+    cardRef.current?.querySelector('input')?.focus();
+    return () => prev?.focus();
+  }, [currState]);
+
+  /* Esc to close */
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') setShowLogin(false); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [setShowLogin]);
+
+  const onChangeHandler = (e) => {
+    const { name, value } = e.target;
+    setData(prev => ({ ...prev, [name]: value }));
   };
 
-  const onLogin = async (event) => {
-    event.preventDefault();
-    
-    if (currState === "Sign Up" && !agree) {
-      toast.error("Please agree to the Terms of Use & Privacy Policy.");
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (currState === 'Sign Up' && !agree) {
+      toast.error('Please agree to the Terms of Use & Privacy Policy.');
       return;
     }
-
     setLoading(true);
-    let newUrl = url;
-    if (currState === "Login") {
-      newUrl += '/api/user/login';
-    } else {
-      newUrl += "/api/user/register";
-    }
-
+    const endpoint = currState === 'Login' ? '/api/user/login' : '/api/user/register';
     try {
-      const response = await axios.post(newUrl, data);
-      if (response.data.success) {
-        setToken(response.data.token);
-        localStorage.setItem("token", response.data.token);
-        toast.success(currState === "Login" ? "Logged in successfully!" : "Account created successfully!");
+      const res = await axios.post(`${url}${endpoint}`, data);
+      if (res.data.success) {
+        setToken(res.data.token);
+        localStorage.setItem('token', res.data.token);
+        toast.success(currState === 'Login' ? 'Logged in successfully!' : 'Account created successfully!');
         setShowLogin(false);
       } else {
-        toast.error(response.data.message);
+        toast.error(res.data.message);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Authentication failed. Please try again.");
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const inputContainerClass = (name) => {
-    const hasVal = !!data[name];
-    return `relative flex items-center bg-slate-50 border-2 rounded-2xl px-4 py-3.5 transition-all duration-300 ${
-      hasVal ? "border-slate-200 focus-within:border-emerald-500" : "border-slate-100 focus-within:border-emerald-500"
-    } focus-within:bg-white focus-within:shadow-[0_8px_30px_rgba(16,185,129,0.06)]`;
-  };
+  const isSignUp = currState === 'Sign Up';
 
   return (
     <AnimatePresence>
@@ -73,192 +122,261 @@ const LoginPopup = ({ setShowLogin, initialState }) => {
         className="fixed inset-0 z-[150] flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
-        aria-label="Authentication Form"
+        aria-label="Authentication"
       >
-        {/* Backdrop glassmorphism overlay */}
+        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-0 bg-slate-950/70 backdrop-blur-md"
+          transition={{ duration: 0.25 }}
+          className="absolute inset-0 bg-zinc-950/75 backdrop-blur-sm"
           onClick={() => setShowLogin(false)}
         />
 
-        {/* Auth Card container */}
+        {/* Modal card — two-panel */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          ref={cardRef}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 16 }}
-          transition={{ type: "spring", stiffness: 340, damping: 28 }}
-          className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100/60 overflow-hidden z-10"
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          className="relative z-10 w-full max-w-[820px] flex rounded-2xl overflow-hidden shadow-[0_32px_80px_-8px_rgba(0,0,0,0.4)] border border-white/8"
         >
-          {/* Accent colored top bar */}
-          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-500" />
 
-          {/* Close button */}
-          <button
-            type="button"
-            onClick={() => setShowLogin(false)}
-            aria-label="Close"
-            className="absolute top-6 right-6 w-9 h-9 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-900 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-          >
-            <FiX size={18} />
-          </button>
+          {/* ── LEFT: Dark Brand Panel ─────────────────────────── */}
+          <div className="hidden md:flex md:w-[42%] bg-zinc-950 flex-col justify-between p-9 relative overflow-hidden flex-shrink-0">
 
-          <div className="p-8 sm:p-9">
-            {/* Circular glowing header icon */}
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-[0_8px_20px_-4px_rgba(16,185,129,0.4)] mb-6">
-              <FiLock className="w-6 h-6 text-white" />
+            {/* Glow orbs */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/12 rounded-full blur-[70px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/8 rounded-full blur-[60px] pointer-events-none" />
+
+            {/* Dot pattern */}
+            <div className="absolute inset-0 opacity-[0.025] bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px]" />
+
+            {/* Brand */}
+            <div className="relative z-10 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border border-white/10">
+                <BrandLogo size={12} />
+              </div>
+              <span className="text-sm font-mono font-bold uppercase tracking-widest text-white">{BRAND.NAME}</span>
             </div>
 
-            {/* Form Headers */}
-            <div className="mb-6">
-              <h2 className="font-poppins text-2xl font-extrabold text-slate-900 leading-tight">
-                {currState === "Sign Up" ? "Create your account" : "Welcome back"}
-              </h2>
-              <p className="text-slate-400 text-sm font-semibold mt-1">
-                {currState === "Sign Up"
-                  ? "Start ordering your favorite food today"
-                  : "Sign in to continue ordering"}
-              </p>
+            {/* Center copy */}
+            <div className="relative z-10 space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-white leading-snug">
+                  {isSignUp
+                    ? <>Join {BRAND.NAME}<br /><span className="text-emerald-400">and start ordering.</span></>
+                    : <>Welcome<br /><span className="text-emerald-400">back.</span></>
+                  }
+                </h2>
+                <p className="text-zinc-500 text-xs font-medium leading-relaxed mt-3 max-w-[220px]">
+                  {isSignUp
+                    ? 'Create a free account and start ordering from the best local restaurants.'
+                    : 'Sign in to your account to continue ordering your favourite meals.'
+                  }
+                </p>
+              </div>
+
+              {/* Brand points */}
+              <div className="space-y-2.5">
+                {BRAND_POINTS.map((p, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                      {p.icon}
+                    </div>
+                    <span className="text-xs font-semibold text-zinc-400">{p.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Sliding Pill Tab Switcher */}
-            <div className="flex gap-1.5 p-1.5 bg-slate-100 border border-slate-200/40 rounded-2xl mb-6">
-              {["Login", "Sign Up"].map((tab) => {
-                const active = currState === tab;
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setCurrState(tab)}
-                    className={`relative flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
-                      active ? "text-emerald-700" : "text-slate-500 hover:text-slate-800"
-                    }`}
+            {/* Bottom live indicator */}
+            <div className="relative z-10 flex items-center gap-2 text-zinc-600 text-[10px] font-mono">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              <span>Deliveries: Operational</span>
+            </div>
+          </div>
+
+          {/* ── RIGHT: Form Panel ──────────────────────────────── */}
+          <div className="flex-1 bg-[#fafafa] flex flex-col">
+
+            {/* Top accent bar */}
+            <div className="h-0.5 w-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-500" />
+
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setShowLogin(false)}
+              aria-label="Close"
+              className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900 flex items-center justify-center transition-colors z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+            >
+              <FiX size={16} />
+            </button>
+
+            <div className="flex-1 flex flex-col justify-center px-8 py-10 sm:px-10">
+
+              {/* Header */}
+              <div className="mb-6">
+                <h1 className="text-lg font-bold tracking-tight text-zinc-900">
+                  {isSignUp ? 'Create your account' : 'Sign in to your account'}
+                </h1>
+                <p className="text-xs text-zinc-400 font-semibold mt-1">
+                  {isSignUp ? 'Start ordering your favourite food today.' : 'Enter your credentials to continue.'}
+                </p>
+              </div>
+
+              {/* Tab switcher */}
+              <div className="flex gap-1 p-1 bg-zinc-100 border border-zinc-200/60 rounded-xl mb-6">
+                {['Login', 'Sign Up'].map((tab) => {
+                  const active = currState === tab;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setCurrState(tab)}
+                      className={`relative flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-250 ${
+                        active ? 'text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="auth-tab-pill"
+                          className="absolute inset-0 bg-white border border-zinc-200/60 rounded-lg shadow-sm -z-10"
+                          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                        />
+                      )}
+                      {tab === 'Login' ? 'Sign In' : 'Register'}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Form */}
+              <form onSubmit={onSubmit} className="space-y-3">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currState}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="space-y-3"
                   >
-                    {active && (
-                      <motion.span
-                        layoutId="active-auth-tab"
-                        className="absolute inset-0 bg-white border border-slate-200/50 rounded-xl shadow-sm -z-10"
-                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                      />
+                    {/* Name — Sign Up only */}
+                    {isSignUp && (
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Full Name</label>
+                        <Field
+                          icon={<FiUser size={13} />}
+                          name="name"
+                          placeholder="John Doe"
+                          value={data.name}
+                          onChange={onChangeHandler}
+                          required
+                          autoFocus={isSignUp}
+                        />
+                      </div>
                     )}
-                    {tab === "Login" ? "Sign In" : "Register"}
-                  </button>
-                );
-              })}
-            </div>
 
-            {/* Input fields form */}
-            <form onSubmit={onLogin} className="flex flex-col gap-4">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currState}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.18 }}
-                  className="space-y-4"
-                >
-                  {currState === "Sign Up" && (
-                    <div className={inputContainerClass("name")}>
-                      <span className="text-slate-400 mr-3 pointer-events-none">
-                        <FiUser size={16} />
-                      </span>
-                      <input
-                        name="name"
-                        value={data.name}
+                    {/* Email */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Email Address</label>
+                      <Field
+                        icon={<FiMail size={13} />}
+                        name="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={data.email}
                         onChange={onChangeHandler}
-                        type="text"
-                        placeholder="Full name"
                         required
-                        className="flex-1 bg-transparent text-sm font-medium text-slate-850 placeholder-slate-400 outline-none"
+                        autoFocus={!isSignUp}
                       />
                     </div>
-                  )}
 
-                  <div className={inputContainerClass("email")}>
-                    <span className="text-slate-400 mr-3 pointer-events-none">
-                      <FiMail size={16} />
+                    {/* Password */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Password</label>
+                      <Field
+                        icon={<FiLock size={13} />}
+                        name="password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={data.password}
+                        onChange={onChangeHandler}
+                        required
+                      />
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Terms checkbox — Sign Up only */}
+                {isSignUp && (
+                  <motion.label
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-start gap-2.5 mt-1 cursor-pointer select-none pt-1"
+                  >
+                    <div className="relative flex items-center justify-center mt-px flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={agree}
+                        onChange={(e) => setAgree(e.target.checked)}
+                        className="peer appearance-none w-4 h-4 rounded border border-zinc-300 checked:bg-zinc-950 checked:border-zinc-950 focus:outline-none transition-all cursor-pointer"
+                      />
+                      <FiCheck className="absolute text-white w-2.5 h-2.5 pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" strokeWidth={3} />
+                    </div>
+                    <span className="text-[11px] font-semibold text-zinc-500 leading-relaxed">
+                      I agree to the{' '}
+                      <span className="text-emerald-600 font-bold hover:underline cursor-pointer">Terms of Use</span>
+                      {' '}&{' '}
+                      <span className="text-emerald-600 font-bold hover:underline cursor-pointer">Privacy Policy</span>
                     </span>
-                    <input
-                      name="email"
-                      value={data.email}
-                      onChange={onChangeHandler}
-                      type="email"
-                      placeholder="Email address"
-                      required
-                      className="flex-1 bg-transparent text-sm font-medium text-slate-850 placeholder-slate-400 outline-none"
-                    />
-                  </div>
-
-                  <div className={inputContainerClass("password")}>
-                    <span className="text-slate-400 mr-3 pointer-events-none">
-                      <FiLock size={16} />
-                    </span>
-                    <input
-                      name="password"
-                      value={data.password}
-                      onChange={onChangeHandler}
-                      type="password"
-                      placeholder="Password"
-                      required
-                      className="flex-1 bg-transparent text-sm font-medium text-slate-850 placeholder-slate-400 outline-none"
-                    />
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Terms Checkbox - Sign Up mode only */}
-              {currState === "Sign Up" && (
-                <motion.label
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-start gap-3 mt-1 cursor-pointer select-none"
-                >
-                  <div className="relative flex items-center justify-center mt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={agree}
-                      onChange={(e) => setAgree(e.target.checked)}
-                      className="peer appearance-none w-4.5 h-4.5 rounded-lg border-2 border-slate-200 checked:bg-emerald-500 checked:border-emerald-500 focus:outline-none transition-all cursor-pointer"
-                    />
-                    <FiCheck className="absolute text-white w-3 h-3 pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" strokeWidth={4} />
-                  </div>
-                  <span className="text-xs font-semibold text-slate-500 leading-normal">
-                    I agree to the{" "}
-                    <span className="text-emerald-600 hover:underline font-bold">Terms of Use</span>
-                    {" "}&{" "}
-                    <span className="text-emerald-600 hover:underline font-bold">Privacy Policy</span>
-                  </span>
-                </motion.label>
-              )}
-
-              {/* Submit Action button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold rounded-2xl text-sm shadow-emerald-sm hover:shadow-emerald transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
-              >
-                {loading ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
-                      className="w-4.5 h-4.5 border-2 border-white/40 border-t-white rounded-full"
-                    />
-                    Authenticating…
-                  </>
-                ) : (
-                  <>
-                    <span>{currState === "Sign Up" ? "Create Account" : "Sign In"}</span>
-                    <FiArrowRight size={15} />
-                  </>
+                  </motion.label>
                 )}
-              </button>
-            </form>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-2 py-2.5 bg-zinc-950 hover:bg-zinc-800 text-white font-bold rounded-xl text-xs shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
+                >
+                  {loading ? (
+                    <>
+                      <motion.span
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                        className="inline-block"
+                      >
+                        <FiLoader size={13} />
+                      </motion.span>
+                      {isSignUp ? 'Creating account…' : 'Signing in…'}
+                    </>
+                  ) : (
+                    <>
+                      {isSignUp ? 'Create Account' : 'Sign In'}
+                      <FiArrowRight size={13} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Footer tab switch hint */}
+              <p className="text-center text-[11px] font-semibold text-zinc-400 mt-6">
+                {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                <button
+                  type="button"
+                  onClick={() => setCurrState(isSignUp ? 'Login' : 'Sign Up')}
+                  className="text-emerald-600 font-bold hover:underline focus-visible:outline-none"
+                >
+                  {isSignUp ? 'Sign in' : 'Create one'}
+                </button>
+              </p>
+
+            </div>
           </div>
+
         </motion.div>
       </div>
     </AnimatePresence>

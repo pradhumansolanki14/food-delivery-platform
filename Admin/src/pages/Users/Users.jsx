@@ -1,176 +1,164 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { FiUsers, FiShoppingBag, FiDollarSign, FiX, FiChevronRight, FiUser, FiPhone, FiMail, FiCalendar, FiSearch, FiAlertCircle } from "react-icons/fi";
-import { Card, Badge, Button, Input, ConfirmationModal } from "../../components/ui";
+import React, { useState, useEffect } from "react"
+import axios from "axios"
+import { toast } from "react-hot-toast"
+import { FiUsers, FiShoppingBag, FiDollarSign, FiX, FiChevronRight, FiUser, FiPhone, FiMail, FiCalendar, FiSearch, FiAlertCircle } from "react-icons/fi"
+import { Card, Badge, ConfirmationModal } from "../../components/ui"
 
 const Users = ({ url }) => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState(null);
-  const [userDetail, setUserDetail] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: null });
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState("")
+  const [selected, setSelected] = useState(null)
+  const [userDetail, setUserDetail] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: "", message: "", onConfirm: null })
 
-  const adminToken = localStorage.getItem("adminToken");
+  const adminToken = localStorage.getItem("adminToken")
 
   const fetchUsers = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const res = await axios.get(`${url}/api/admin/users`, { headers: { token: adminToken } });
+      const res = await axios.get(`${url}/api/admin/users`, { headers: { token: adminToken } })
       if (res.data.success) {
-        setUsers(res.data.data);
+        setUsers(res.data.data)
       }
     } catch {
-      toast.error("Failed to load users");
+      toast.error("Failed to load user directory")
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const fetchUserDetail = async (id) => {
-    setDetailLoading(true);
+    setDetailLoading(true)
     try {
-      const res = await axios.get(`${url}/api/admin/users/${id}`, { headers: { token: adminToken } });
+      const res = await axios.get(`${url}/api/admin/users/${id}`, { headers: { token: adminToken } })
       if (res.data.success) {
-        setUserDetail(res.data.data);
+        setUserDetail(res.data.data)
       }
     } catch {}
-    setDetailLoading(false);
-  };
+    setDetailLoading(false)
+  }
 
   const openUser = (user) => {
-    setSelected(user);
-    fetchUserDetail(user._id);
-  };
+    setSelected(user)
+    fetchUserDetail(user._id)
+  }
 
   const handleToggleUserActive = (user) => {
-    const actionText = user.isActive !== false ? "suspend" : "activate";
+    const actionText = user.isActive !== false ? "suspend" : "activate"
     setConfirmDialog({
       isOpen: true,
-      title: `${user.isActive !== false ? "Suspend" : "Activate"} User`,
-      message: `Are you sure you want to ${actionText} customer "${user.name}"?`,
+      title: `${user.isActive !== false ? "Suspend" : "Activate"} Account`,
+      message: `Are you sure you want to suspend access credentials for customer "${user.name}"?`,
       onConfirm: async () => {
-        setConfirmDialog(d => ({ ...d, isOpen: false }));
+        setConfirmDialog(d => ({ ...d, isOpen: false }))
         try {
-          const res = await axios.put(`${url}/api/admin/users/${user._id}`, { isActive: !user.isActive }, { headers: { token: adminToken } });
+          const res = await axios.put(`${url}/api/admin/users/${user._id}`, { isActive: !user.isActive }, { headers: { token: adminToken } })
           if (res.data.success) {
-            toast.success(res.data.message || `User status updated!`);
-            fetchUsers();
+            toast.success(res.data.message || `Customer access updated!`)
+            fetchUsers()
           } else {
-            toast.error(res.data.message);
+            toast.error(res.data.message || "Failed to update")
           }
         } catch {
-          toast.error("Failed to update user status");
+          toast.error("Failed to update user status")
         }
       },
       onCancel: () => setConfirmDialog(d => ({ ...d, isOpen: false }))
-    });
-  };
+    })
+  }
 
   useEffect(() => { 
-    fetchUsers(); 
-  }, []);
+    fetchUsers() 
+  }, [])
 
   const filtered = users.filter(u =>
     u.name?.toLowerCase().includes(search.toLowerCase()) ||
     u.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  )
 
   const stats = {
     total: users.length,
     totalRevenue: users.reduce((a, b) => a + (b.totalSpent || 0), 0),
     totalOrders: users.reduce((a, b) => a + (b.orderCount || 0), 0),
-  };
+  }
 
   return (
-    <div className="max-w-5xl animate-fadeUp space-y-6">
+    <div className="max-w-5xl space-y-6 animate-fadeUp">
       
-      {/* User detail modal */}
+      {/* Rebuilt Customer Profile Drawer Detail view */}
       {selected && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4" 
-          style={{ background: "rgba(15,23,42,0.65)", backdropFilter: "blur(5px)" }} 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/40 backdrop-blur-xs animate-fadeIn" 
           onClick={e => e.target === e.currentTarget && setSelected(null)}
         >
-          <Card variant="default" radius="3xl" padding="none" className="bg-white shadow-2xl w-full max-w-lg overflow-hidden animate-fadeUp max-h-[85vh] flex flex-col">
-            <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 to-emerald-600" />
+          <Card variant="default" radius="2xl" padding="none" className="bg-white shadow-2xl w-full max-w-md overflow-hidden animate-scaleIn max-h-[80vh] flex flex-col">
+            <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-emerald-600" />
             
-            <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-slate-50">
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center font-bold text-emerald-600 text-lg flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-zinc-950 font-mono font-bold text-white text-xs flex items-center justify-center flex-shrink-0">
                     {selected.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div>
-                    <h2 className="font-poppins font-extrabold text-base text-slate-905 leading-none">{selected.name}</h2>
-                    <p className="text-2xs text-slate-400 font-bold uppercase tracking-wider mt-1">{selected.email}</p>
+                    <h2 className="text-sm font-bold text-zinc-900 leading-none">{selected.name}</h2>
+                    <p className="text-[10px] text-zinc-400 font-semibold mt-1">{selected.email}</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setSelected(null)} 
-                  className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-100 transition-colors"
+                  className="text-zinc-400 hover:text-zinc-800 text-xs font-bold"
                 >
-                  <FiX size={16} />
+                  Close
                 </button>
               </div>
 
-              {/* Stats Row */}
+              {/* High density Stats */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Orders Placed", value: selected.orderCount || 0, icon: <FiShoppingBag size={14} className="text-blue-500" /> },
-                  { label: "Total Spent", value: `$${(selected.totalSpent || 0).toFixed(0)}`, icon: <FiDollarSign size={14} className="text-emerald-500" /> },
-                  { label: "Phone Number", value: selected.phone || "N/A", icon: <FiPhone size={14} className="text-amber-500" /> },
+                  { label: "Orders Count", value: selected.orderCount || 0, icon: <FiShoppingBag size={12} className="text-zinc-400" /> },
+                  { label: "Net Spent", value: `$${(selected.totalSpent || 0).toFixed(2)}`, icon: <FiDollarSign size={12} className="text-emerald-500" /> },
+                  { label: "Contact Phone", value: selected.phone || "None", icon: <FiPhone size={12} className="text-zinc-400" /> },
                 ].map((s, i) => (
-                  <div key={i} className="p-3 bg-slate-50 border border-slate-100/50 rounded-2xl text-center">
-                    <div className="flex justify-center mb-1.5">{s.icon}</div>
-                    <p className="font-poppins font-bold text-slate-900 text-sm leading-none">{s.value}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">{s.label}</p>
+                  <div key={i} className="p-3 bg-zinc-50 border border-zinc-150 rounded-xl text-center space-y-1">
+                    <div className="flex justify-center">{s.icon}</div>
+                    <p className="font-mono font-bold text-zinc-900 text-xs leading-none">{s.value}</p>
+                    <p className="text-[9px] font-bold text-zinc-450 uppercase tracking-wider">{s.label}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Order History */}
-              <div>
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <FiShoppingBag className="text-slate-400" /> Order History
+              {/* Order history timelines */}
+              <div className="space-y-3">
+                <h3 className="text-[10px] font-bold text-zinc-450 uppercase tracking-widest flex items-center gap-1.5">
+                  <FiShoppingBag /> Order History Logs
                 </h3>
                 
                 {detailLoading ? (
                   <div className="space-y-2">
-                    {[1, 2].map(i => <div key={i} className="h-12 bg-slate-50 rounded-xl animate-pulse" />)}
+                    {[1, 2].map(i => <div key={i} className="h-10 bg-zinc-50 rounded-xl animate-pulse" />)}
                   </div>
                 ) : userDetail?.orders?.length > 0 ? (
-                  <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-hide">
-                    {userDetail.orders.map((order, i) => {
-                      const statusColors = { 
-                        "Food Processing": "warning", 
-                        "Out for Delivery": "blue", 
-                        "Delivered": "success" 
-                      };
-                      return (
-                        <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/60 rounded-xl border border-slate-150/45 transition-colors">
-                          <div className="min-w-0 flex-1 pr-3">
-                            <p className="text-xs font-bold text-slate-755 truncate">{order.items?.map(it => it.name).join(", ")}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">{new Date(order.date).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="font-poppins font-extrabold text-slate-900 text-sm leading-none">${order.amount}</p>
-                            <div className="mt-1.5">
-                              <Badge variant={statusColors[order.status] || 'neutral'} size="sm">
-                                {order.status}
-                              </Badge>
-                            </div>
-                          </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
+                    {userDetail.orders.map((order, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-zinc-50 hover:bg-zinc-100/50 rounded-xl border border-zinc-150 transition-colors">
+                        <div className="min-w-0 flex-1 pr-3">
+                          <p className="text-xs font-bold text-zinc-800 truncate">{order.items?.map(it => it.name).join(", ")}</p>
+                          <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mt-1">{new Date(order.date).toLocaleDateString()}</p>
                         </div>
-                      );
-                    })}
+                        <div className="text-right">
+                          <p className="font-mono font-bold text-zinc-900 text-xs">${order.amount.toFixed(2)}</p>
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-1 rounded mt-1 inline-block">
+                            {order.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-slate-400">
-                    <p className="text-xs font-semibold">No order history found for this account.</p>
-                  </div>
+                  <p className="text-center py-6 text-zinc-400 text-2xs font-semibold">No order logs registered for customer</p>
                 )}
               </div>
             </div>
@@ -178,135 +166,134 @@ const Users = ({ url }) => {
         </div>
       )}
 
-      {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200/50 pb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-            <FiUsers size={18} />
+          <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200/60 flex items-center justify-center text-zinc-700">
+            <FiUsers size={16} />
           </div>
           <div>
-            <h1 className="font-poppins font-extrabold text-2xl text-slate-900 tracking-tight">Users</h1>
-            <p className="text-slate-405 text-xs font-semibold">{users.length} registered user profiles</p>
+            <h1 className="text-lg font-bold tracking-tight text-zinc-900">User Directory</h1>
+            <p className="text-xs text-zinc-400 font-semibold mt-0.5">{users.length} customer records indexed</p>
           </div>
         </div>
 
         {/* Search */}
-        <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-2.5 w-full sm:w-72 focus-within:border-emerald-450 transition-colors shadow-2xs">
-          <FiSearch className="text-slate-400 flex-shrink-0" size={16} />
+        <div className="flex items-center gap-2.5 bg-white border border-zinc-200 rounded-xl px-3 py-2 w-full sm:w-72 focus-within:border-zinc-950 transition-colors shadow-premium">
+          <FiSearch className="text-zinc-400 flex-shrink-0" size={14} />
           <input 
             type="text" 
-            placeholder="Search users by name/email..." 
+            placeholder="Search accounts directory..." 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
-            className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none font-medium" 
+            className="flex-1 bg-transparent text-xs text-zinc-800 placeholder-zinc-405 outline-none font-medium" 
           />
         </div>
       </div>
 
-      {/* ── Stats Indicators ── */}
+      {/* High density statistics indicators */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Customers", value: stats.total, icon: <FiUsers size={16} />, color: "bg-blue-50/50 border-blue-105 text-blue-650" },
-          { label: "Total Orders", value: stats.totalOrders, icon: <FiShoppingBag size={16} />, color: "bg-amber-50/50 border-amber-105 text-amber-650" },
-          { label: "Net Platform Revenue", value: `$${stats.totalRevenue.toFixed(0)}`, icon: <FiDollarSign size={16} />, color: "bg-emerald-50/50 border-emerald-105 text-emerald-650" },
+          { label: "Net Registered", value: stats.total, icon: <FiUsers size={14} /> },
+          { label: "Gross Receipts", value: stats.totalOrders, icon: <FiShoppingBag size={14} /> },
+          { label: "Gross Spend value", value: `$${stats.totalRevenue.toFixed(2)}`, icon: <FiDollarSign size={14} /> },
         ].map((s, i) => (
-          <div key={i} className={`bg-white rounded-2xl border p-4 flex items-center gap-3 shadow-sm ${s.color}`}>
-            <div className="w-9 h-9 bg-white border border-slate-100/80 rounded-xl flex items-center justify-center">
-              {s.icon}
-            </div>
+          <div key={i} className="bg-white rounded-xl border border-zinc-200/60 p-4 shadow-premium flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-zinc-50 border border-zinc-150 flex items-center justify-center text-zinc-505">{s.icon}</div>
             <div>
-              <p className="text-lg font-poppins font-extrabold text-slate-900 leading-tight">{s.value}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{s.label}</p>
+              <p className="text-sm font-mono font-bold text-zinc-900 leading-none">{s.value}</p>
+              <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1.5">{s.label}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── Table Grid view ── */}
-      <Card variant="default" radius="3xl" padding="none" className="border border-slate-100 shadow-card overflow-hidden">
-        {/* Table Header */}
-        <div className="hidden sm:grid grid-cols-[2fr_2.5fr_0.8fr_0.8fr_1fr_auto] gap-4 px-6 py-4.5 bg-slate-50 border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
-          <span>Customer Name</span>
-          <span>Email Address</span>
-          <span className="text-center">Orders</span>
-          <span>Total Spent</span>
-          <span>Status</span>
+      {/* Rebuilt Directory table */}
+      <div className="bg-white border border-zinc-200/60 rounded-xl shadow-premium overflow-hidden">
+        {/* Table head */}
+        <div className="hidden sm:grid grid-cols-[2fr_2.5fr_0.8fr_0.8fr_1fr_auto] gap-4 px-6 py-4.5 bg-zinc-50/50 border-b border-zinc-150/80 text-[9px] font-bold uppercase tracking-widest text-zinc-400">
+          <span>Customer Identity</span>
+          <span>Credential Email</span>
+          <span className="text-center">Receipts</span>
+          <span>Net Spend</span>
+          <span>Access State</span>
           <span className="text-right">Actions</span>
         </div>
 
         {loading ? (
           <div className="p-6 space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-4 animate-pulse h-12 bg-slate-50 rounded-xl" />
-            ))}
+            {[1, 2, 3].map(i => <div key={i} className="h-10 bg-zinc-100 rounded-lg animate-pulse" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-440 text-center p-8">
-            <FiAlertCircle size={28} className="text-slate-350 mb-3" />
-            <p className="font-bold text-slate-705 text-sm">{search ? 'No users matched' : 'No users registered yet'}</p>
-            <p className="text-xs text-slate-400 mt-1">Try resetting search filter query.</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <FiAlertCircle size={24} className="text-zinc-300 mb-3" />
+            <p className="font-bold text-zinc-700 text-sm">No matches found</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-zinc-100">
             {filtered.map((user) => (
               <div 
                 key={user._id} 
-                className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[2fr_2.5fr_0.8fr_0.8fr_1fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50/40 transition-colors cursor-pointer group" 
+                className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[2fr_2.5fr_0.8fr_0.8fr_1fr_auto] gap-4 items-center px-6 py-4 hover:bg-zinc-50/20 transition-all duration-200 cursor-pointer group" 
                 onClick={() => openUser(user)}
               >
-                {/* Name */}
+                {/* User name info */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center font-bold text-white text-sm flex-shrink-0 shadow-sm">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200/80 flex items-center justify-center font-mono font-bold text-zinc-800 text-xs flex-shrink-0">
                     {user.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-slate-805 text-xs sm:text-sm truncate group-hover:text-emerald-650 transition-colors">{user.name}</p>
-                    <p className="sm:hidden text-2xs text-slate-400 font-bold truncate mt-0.5">{user.email}</p>
+                    <p className="font-bold text-zinc-805 text-xs sm:text-sm truncate group-hover:text-emerald-600 transition-colors">{user.name}</p>
+                    <p className="sm:hidden text-[9px] text-zinc-400 font-bold truncate mt-0.5">{user.email}</p>
                   </div>
                 </div>
 
-                {/* Email */}
-                <p className="hidden sm:block text-xs font-semibold text-slate-500 truncate">{user.email}</p>
+                {/* Email address */}
+                <p className="hidden sm:block text-xs font-semibold text-zinc-500 truncate">{user.email}</p>
 
-                {/* Orders count */}
-                <span className="hidden sm:flex items-center justify-center w-8 h-8 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 mx-auto">
+                {/* Orders Count */}
+                <span className="hidden sm:flex items-center justify-center w-8 h-8 bg-zinc-50 border border-zinc-200 rounded-lg text-xs font-mono font-bold text-zinc-700 mx-auto">
                   {user.orderCount || 0}
                 </span>
 
-                {/* Total spent */}
-                <p className="hidden sm:block font-poppins font-extrabold text-emerald-650 text-sm">${(user.totalSpent || 0).toFixed(0)}</p>
+                {/* Spend value */}
+                <p className="hidden sm:block font-mono font-bold text-zinc-900 text-xs">${(user.totalSpent || 0).toFixed(2)}</p>
 
-                {/* Status Column */}
+                {/* State badge */}
                 <div onClick={e => e.stopPropagation()} className="hidden sm:block">
-                  <Badge variant={user.isActive !== false ? "success" : "neutral"} size="sm" className="font-bold">
+                  <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${
+                    user.isActive !== false 
+                      ? 'bg-emerald-50 border-emerald-250/30 text-emerald-700' 
+                      : 'bg-rose-50 border-rose-250/30 text-rose-600'
+                  }`}>
                     {user.isActive !== false ? "Active" : "Suspended"}
-                  </Badge>
+                  </span>
                 </div>
 
-                {/* Actions Column */}
+                {/* Actions toggles */}
                 <div onClick={e => e.stopPropagation()} className="flex items-center gap-2 justify-end">
                   <button
                     onClick={() => handleToggleUserActive(user)}
-                    className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                    className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider border transition-colors ${
                       user.isActive !== false
-                        ? "bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100"
-                        : "bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                        ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
+                        : "bg-emerald-50 border-emerald-200 text-emerald-705 hover:bg-emerald-100"
                     }`}
                   >
                     {user.isActive !== false ? "Suspend" : "Activate"}
                   </button>
                   <div 
                     onClick={() => openUser(user)}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-350 hover:text-emerald-600 hover:bg-emerald-50 transition-colors ml-auto sm:ml-0"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-800 transition-colors ml-auto sm:ml-0"
                   >
-                    <FiChevronRight size={16} />
+                    <FiChevronRight size={15} />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </Card>
+      </div>
 
       <ConfirmationModal 
         isOpen={confirmDialog.isOpen}
@@ -317,7 +304,7 @@ const Users = ({ url }) => {
         variant={confirmDialog.title?.startsWith("Suspend") ? "danger" : "warning"}
       />
     </div>
-  );
-};
+  )
+}
 
-export default Users;
+export default Users

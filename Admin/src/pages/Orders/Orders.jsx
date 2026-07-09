@@ -1,95 +1,105 @@
-import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import axios from "axios";
-import { FiShoppingBag, FiClock, FiTruck, FiCheckCircle, FiRefreshCw, FiDollarSign, FiUser, FiMapPin, FiPhone, FiAlertCircle } from "react-icons/fi";
-import { useAdmin } from "../../context/AdminContext";
-import { Card, Badge, Button } from "../../components/ui";
+import React, { useState, useEffect } from "react"
+import { toast } from "react-hot-toast"
+import axios from "axios"
+import { 
+  FiShoppingBag, FiClock, FiTruck, FiCheckCircle, 
+  FiRefreshCw, FiDollarSign, FiUser, FiMapPin, FiPhone, FiAlertCircle 
+} from "react-icons/fi"
+import { useAdmin } from "../../context/AdminContext"
+import { Card, Badge } from "../../components/ui"
 
 const statusConfig = {
   "Food Processing": {
     badge: "warning",
-    icon: <FiClock size={16} />,
-    barClass: "bg-amber-400 w-1/3",
+    icon: <FiClock size={14} />,
+    colorClass: "text-amber-600 bg-amber-50 border-amber-100",
   },
   "Out for Delivery": {
     badge: "blue",
-    icon: <FiTruck size={16} />,
-    barClass: "bg-blue-400 w-2/3",
+    icon: <FiTruck size={14} />,
+    colorClass: "text-blue-600 bg-blue-50 border-blue-100",
   },
   "Delivered": {
     badge: "success",
-    icon: <FiCheckCircle size={16} />,
-    barClass: "bg-emerald-500 w-full",
+    icon: <FiCheckCircle size={14} />,
+    colorClass: "text-emerald-605 bg-emerald-50 border-emerald-100",
   },
-};
+}
 
 const Orders = ({ url }) => {
-  const [orders, setOrders] = useState([]);
-  const [restaurants, setRestaurants] = useState([]);
-  const [restaurantFilter, setRestaurantFilter] = useState("All");
-  const [restaurantMap, setRestaurantMap] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("All");
-  const { adminRole } = useAdmin();
-  const adminToken = localStorage.getItem("adminToken");
+  const [orders, setOrders] = useState([])
+  const [restaurants, setRestaurants] = useState([])
+  const [restaurantFilter, setRestaurantFilter] = useState("All")
+  const [restaurantMap, setRestaurantMap] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState("All")
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  
+  const { adminRole } = useAdmin()
+  const adminToken = localStorage.getItem("adminToken")
 
   const fetchAllOrders = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await axios.get(url + "/api/order/list", { headers: { token: adminToken } });
+      const response = await axios.get(url + "/api/order/list", { headers: { token: adminToken } })
       if (response.data.success) {
-        setOrders(response.data.data);
+        setOrders(response.data.data)
+        // Auto-select first order if none selected
+        if (response.data.data.length > 0) {
+          setSelectedOrder(response.data.data[0])
+        }
       } else {
-        toast.error("Error fetching orders");
+        toast.error("Error fetching orders")
       }
     } catch {
-      toast.error("Error fetching orders");
+      toast.error("Error fetching orders")
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const fetchRestaurants = async () => {
     try {
-      const res = await axios.get(`${url}/api/admin/restaurant/`, { headers: { token: adminToken } });
+      const res = await axios.get(`${url}/api/admin/restaurant/`, { headers: { token: adminToken } })
       if (res.data.success) {
-        setRestaurants(res.data.data);
-        const mapping = {};
+        setRestaurants(res.data.data)
+        const mapping = {}
         res.data.data.forEach(r => {
-          mapping[r._id] = r.name;
-        });
-        setRestaurantMap(mapping);
+          mapping[r._id] = r.name
+        })
+        setRestaurantMap(mapping)
       }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+    } catch {}
+  }
 
-  const statusHandler = async (event, orderId) => {
+  const statusHandler = async (newStatus, orderId) => {
     try {
-      const response = await axios.post(url + "/api/order/status", { orderId, status: event.target.value }, { headers: { token: adminToken } });
+      const response = await axios.post(url + "/api/order/status", { orderId, status: newStatus }, { headers: { token: adminToken } })
       if (response.data.success) {
-        toast.success("Order status updated successfully!");
-        await fetchAllOrders();
+        toast.success("Order status updated!")
+        
+        // Update local list & selected state
+        setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o))
+        setSelectedOrder(prev => prev && prev._id === orderId ? { ...prev, status: newStatus } : prev)
       } else {
-        toast.error(response.data.message || "Failed to update status");
+        toast.error(response.data.message || "Failed to update status")
       }
     } catch {
-      toast.error("Error updating status");
+      toast.error("Error updating status")
     }
-  };
+  }
 
   useEffect(() => { 
-    fetchAllOrders(); 
+    fetchAllOrders() 
     if (adminRole === 'superadmin') {
-      fetchRestaurants();
+      fetchRestaurants()
     }
-  }, [adminRole]);
+  }, [adminRole])
 
   const currentOrders = (adminRole === 'superadmin' && restaurantFilter !== "All")
     ? orders.filter(o => o.restaurantId === restaurantFilter)
-    : orders;
+    : orders
 
-  const filtered = filter === "All" ? currentOrders : currentOrders.filter(o => o.status === filter);
+  const filtered = filter === "All" ? currentOrders : currentOrders.filter(o => o.status === filter)
 
   const stats = {
     total: currentOrders.length,
@@ -97,28 +107,23 @@ const Orders = ({ url }) => {
     delivery: currentOrders.filter(o => o.status === "Out for Delivery").length,
     delivered: currentOrders.filter(o => o.status === "Delivered").length,
     revenue: currentOrders.reduce((a, b) => a + b.amount, 0),
-  };
+  }
 
   return (
-    <div className="max-w-5xl animate-fadeUp space-y-6">
+    <div className="max-w-6xl space-y-6 animate-fadeUp">
       
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-            <FiShoppingBag size={18} />
-          </div>
-          <div>
-            <h1 className="font-poppins font-extrabold text-2xl text-slate-900 tracking-tight">Manage Orders</h1>
-            <p className="text-slate-405 text-xs font-semibold">{currentOrders.length} total orders received</p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200/50 pb-5">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-zinc-905">Orders Queue</h1>
+          <p className="text-xs text-zinc-400 font-semibold mt-0.5">{currentOrders.length} culinary order receipts</p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {adminRole === 'superadmin' && (
             <select
               value={restaurantFilter}
               onChange={e => setRestaurantFilter(e.target.value)}
-              className="px-3.5 py-2 bg-white border border-slate-205 focus:border-emerald-500 rounded-xl text-2xs font-bold uppercase tracking-wider text-slate-655 outline-none cursor-pointer"
+              className="px-3 py-2 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-wider text-zinc-500 outline-none cursor-pointer"
             >
               <option value="All">All Restaurants</option>
               {restaurants.map(r => (
@@ -126,188 +131,194 @@ const Orders = ({ url }) => {
               ))}
             </select>
           )}
-          <Button 
+          <button 
             onClick={fetchAllOrders}
-            variant="outline" 
-            size="sm"
-            leftIcon={<FiRefreshCw size={12} />}
-            className="font-bold border-slate-200 text-slate-655 bg-white hover:bg-slate-50"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-650 text-xs font-bold transition-all bg-white"
           >
-            Refresh
-          </Button>
+            <FiRefreshCw size={12} />
+            <span>Sync queue</span>
+          </button>
         </div>
       </div>
 
-      {/* ── Stats block ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* ── Metric Grid ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Orders", value: stats.total, icon: <FiShoppingBag size={16} />, variant: "neutral" },
-          { label: "Processing", value: stats.processing, icon: <FiClock size={16} />, variant: "warning" },
-          { label: "On the Way", value: stats.delivery, icon: <FiTruck size={16} />, variant: "blue" },
-          { label: "Delivered", value: stats.delivered, icon: <FiCheckCircle size={16} />, variant: "success" },
+          { label: "Gross Value", value: `$${stats.revenue.toFixed(2)}`, icon: <FiDollarSign size={14} />, color: "bg-emerald-50 text-emerald-650" },
+          { label: "All Orders", value: stats.total, icon: <FiShoppingBag size={14} />, color: "bg-zinc-50 text-zinc-500" },
+          { label: "In Kitchen", value: stats.processing, icon: <FiClock size={14} />, color: "bg-amber-50 text-amber-600" },
+          { label: "In Transit", value: stats.delivery, icon: <FiTruck size={14} />, color: "bg-blue-50 text-blue-600" },
+          { label: "Completed", value: stats.delivered, icon: <FiCheckCircle size={14} />, color: "bg-emerald-50 text-emerald-600" },
         ].map((s, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-slate-100/70 p-4 shadow-sm flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-              s.variant === 'success' ? 'bg-emerald-50 text-emerald-600' :
-              s.variant === 'warning' ? 'bg-amber-50 text-amber-600' :
-              s.variant === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-500'
-            }`}>
+          <div key={i} className="bg-white rounded-xl border border-zinc-200/60 p-4 shadow-premium flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.color}`}>
               {s.icon}
             </div>
             <div>
-              <p className="text-lg font-poppins font-extrabold text-slate-900 leading-tight">{s.value}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{s.label}</p>
+              <p className="text-sm font-mono font-bold text-zinc-900 leading-none">{s.value}</p>
+              <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{s.label}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── Revenue Summary Banner ── */}
-      <Card variant="default" radius="2xl" padding="md" className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-5 flex items-center justify-between text-white border-0 shadow-emerald-lg">
-        <div>
-          <p className="text-emerald-100 text-2xs font-extrabold uppercase tracking-widest mb-1 leading-none">Restaurant Revenue Summary</p>
-          <p className="font-poppins font-extrabold text-3xl tracking-tight">${stats.revenue.toFixed(2)}</p>
-        </div>
-        <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-white">
-          <FiDollarSign size={24} />
-        </div>
-      </Card>
-
-      {/* ── Filters Scroll Pills ── */}
+      {/* ── Filters Filter pills ── */}
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-        {["All", "Food Processing", "Out for Delivery", "Delivered"].map((f) => (
-          <button 
-            key={f} 
-            onClick={() => setFilter(f)}
-            className={`flex-shrink-0 px-3.5 py-1.5 rounded-xl text-2xs font-bold uppercase tracking-wider border transition-all duration-200 ${
-              filter === f
-                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                : 'bg-white border border-slate-205 text-slate-500 hover:border-slate-350 hover:text-slate-700'
-            }`}
-          >
-            <span>{f}</span>
-            <span className="text-[10px] ml-1 bg-slate-100 text-slate-655 px-1.5 py-0.5 rounded font-extrabold">
-              {f === "All" ? stats.total : f === "Food Processing" ? stats.processing : f === "Out for Delivery" ? stats.delivery : stats.delivered}
-            </span>
-          </button>
-        ))}
+        {["All", "Food Processing", "Out for Delivery", "Delivered"].map((f) => {
+          const qty = f === "All" ? stats.total : f === "Food Processing" ? stats.processing : f === "Out for Delivery" ? stats.delivery : stats.delivered
+          return (
+            <button 
+              key={f} 
+              onClick={() => setFilter(f)}
+              className={`flex-shrink-0 px-3.5 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all duration-200 ${
+                filter === f
+                  ? 'bg-zinc-950 text-white border-zinc-955 shadow-sm'
+                  : 'bg-white border border-zinc-200 text-zinc-500 hover:border-zinc-450 hover:text-zinc-700'
+              }`}
+            >
+              <span>{f}</span>
+              <span className="text-[9px] font-mono ml-1.5 opacity-60 font-bold">({qty})</span>
+            </button>
+          )
+        })}
       </div>
 
-      {/* ── Orders Listing ── */}
-      {loading ? (
-        <div className="space-y-4">
-          {[1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-3xl border border-slate-100 p-6 animate-pulse h-40" />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-100 text-center p-8">
-          <FiAlertCircle size={28} className="text-slate-350 mb-3 animate-bounce" />
-          <p className="font-bold text-slate-755 text-sm">No orders found</p>
-          <p className="text-xs text-slate-400 mt-1">
-            {filter !== "All" ? `You have no active orders in "${filter}" stage.` : "No customer orders have been received yet."}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filtered.map((order, index) => {
-            const sc = statusConfig[order.status] || statusConfig["Food Processing"];
-            return (
-              <div 
-                key={index}
-                className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-card transition-all duration-300 overflow-hidden animate-fadeUp"
-              >
-                {/* Status indicator Progress Line */}
-                <div className="h-1.5 bg-slate-50 border-b border-slate-100 w-full">
-                  <div className={`h-full ${sc.barClass} transition-all duration-500 rounded-full`} />
-                </div>
-
-                <div className="p-5 sm:p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-start gap-5">
-                    
-                    {/* Left icon marker block */}
-                    <div className="flex items-center gap-3 lg:flex-col lg:items-center">
-                      <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-150/60 flex items-center justify-center text-slate-655 flex-shrink-0 shadow-3xs">
-                        {sc.icon}
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 font-mono tracking-wider mt-2.5 bg-slate-100 px-2 py-0.5 rounded">
-                        #{String(index + 1).padStart(4, '0')}
-                      </span>
+      {/* ── Master Detail View split columns ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left Column: Master Orders List (5 cols) */}
+        <div className="lg:col-span-5 space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          {loading ? (
+            [1, 2, 3].map(i => <div key={i} className="h-20 bg-white border border-zinc-200 rounded-xl animate-pulse" />)
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 bg-white rounded-xl border border-zinc-200/50 text-center p-6">
+              <FiAlertCircle size={22} className="text-zinc-300 mb-2" />
+              <p className="font-bold text-zinc-755 text-xs">No active orders</p>
+            </div>
+          ) : (
+            filtered.map((order, idx) => {
+              const sc = statusConfig[order.status] || statusConfig["Food Processing"]
+              const isSelected = selectedOrder && selectedOrder._id === order._id
+              return (
+                <div
+                  key={order._id}
+                  onClick={() => setSelectedOrder(order)}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    isSelected 
+                      ? 'border-zinc-950 bg-zinc-50/50 shadow-sm' 
+                      : 'border-zinc-200 bg-white hover:border-zinc-300'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-xs font-bold text-zinc-800">
+                        {order.address?.firstName} {order.address?.lastName}
+                      </p>
+                      <p className="text-[9px] font-mono text-zinc-400 mt-1 uppercase">Order #{order._id?.slice(-6)}</p>
                     </div>
+                    <span className="text-xs font-mono font-bold text-zinc-900">${order.amount.toFixed(2)}</span>
+                  </div>
 
-                    {/* Content grids split columns */}
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
-                      
-                      {/* Items lists */}
-                      <div>
-                        {adminRole === 'superadmin' && order.restaurantId && (
-                          <div className="mb-3">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-50 border border-emerald-100 text-emerald-705">
-                              Store: {restaurantMap[order.restaurantId] || "Loading..."}
-                            </span>
-                          </div>
-                        )}
-                        <p className="text-[10px] font-bold text-slate-405 uppercase tracking-widest mb-3.5">Items Ordered</p>
-                        <p className="text-xs font-semibold text-slate-800 leading-relaxed">
-                          {order.items.map((item, i) => (
-                            <span key={i} className="block mb-1.5">
-                              <span className="font-extrabold text-emerald-650 bg-emerald-50 px-1.5 py-0.5 rounded mr-1.5">×{item.quantity}</span>
-                              {item.name}
-                            </span>
-                          ))}
-                        </p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-3.5">
-                          Total items: {order.items.length}
-                        </p>
-                      </div>
-
-                      {/* Customer Address Details */}
-                      <div>
-                        <p className="text-[10px] font-bold text-slate-405 uppercase tracking-widest mb-3.5 flex items-center gap-1.5">
-                          <FiUser className="text-slate-400" /> Customer & Delivery
-                        </p>
-                        <p className="text-xs font-bold text-slate-905">{order.address.firstName} {order.address.lastName}</p>
-                        <div className="mt-2 space-y-1 text-slate-500 font-medium text-xs leading-relaxed">
-                          <p className="flex items-center gap-1"><FiMapPin className="text-slate-350" size={11} /> {order.address.street}</p>
-                          <p className="text-2xs text-slate-400 pl-4">{order.address.city}, {order.address.state} {order.address.zipcode}</p>
-                          <p className="flex items-center gap-1 mt-2 text-slate-700 font-semibold"><FiPhone className="text-slate-350" size={11} /> {order.address.phone}</p>
-                        </div>
-                      </div>
-
-                      {/* Payment values & status select dropdowns */}
-                      <div className="flex flex-col justify-between">
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-405 uppercase tracking-widest mb-2.5">Total & Status Action</p>
-                          <p className="font-poppins font-extrabold text-2xl text-slate-900 leading-none mb-4">${order.amount.toFixed(2)}</p>
-                        </div>
-                        
-                        <select
-                          onChange={(e) => statusHandler(e, order._id)}
-                          value={order.status}
-                          className={`text-2xs font-bold uppercase tracking-wider px-3.5 py-2.5 rounded-xl border-2 outline-none cursor-pointer focus:ring-1 focus:ring-emerald-350 transition-all duration-300 w-full ${
-                            order.status === "Delivered" 
-                              ? "bg-emerald-50 border-emerald-100 text-emerald-805" 
-                              : order.status === "Out for Delivery"
-                                ? "bg-blue-50 border-blue-105 text-blue-805"
-                                : "bg-amber-50 border-amber-105 text-amber-805"
-                          }`}
-                        >
-                          <option value="Food Processing">Food Processing</option>
-                          <option value="Out for Delivery">Out for Delivery</option>
-                          <option value="Delivered">Delivered</option>
-                        </select>
-                      </div>
-
-                    </div>
+                  <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-zinc-100">
+                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">
+                      {order.items?.length} dish{order.items?.length !== 1 ? 'es' : ''}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${sc.colorClass}`}>
+                      {order.status}
+                    </span>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              )
+            })
+          )}
         </div>
-      )}
-    </div>
-  );
-};
 
-export default Orders;
+        {/* Right Column: Detail Order Panel (7 cols) */}
+        <div className="lg:col-span-7 bg-white border border-zinc-200/60 rounded-xl shadow-premium p-6 space-y-6">
+          {selectedOrder ? (
+            <>
+              {/* Top summary row */}
+              <div className="flex justify-between items-start border-b border-zinc-100 pb-4">
+                <div>
+                  <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-widest">Selected Receipt</span>
+                  <h3 className="text-base font-bold text-zinc-900 mt-0.5">Order #{selectedOrder._id?.slice(-8)}</h3>
+                </div>
+                <div className="text-right">
+                  <span className="text-[9px] font-mono font-bold text-zinc-400 uppercase tracking-widest">Total Price</span>
+                  <p className="text-lg font-mono font-bold text-zinc-900 mt-0.5">${selectedOrder.amount.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Items listing card */}
+              <div className="space-y-3">
+                <p className="text-[9px] font-bold text-zinc-450 uppercase tracking-widest">Items list</p>
+                <div className="bg-zinc-50 border border-zinc-150 rounded-xl p-4 divide-y divide-zinc-200/50">
+                  {selectedOrder.items?.map((item, idx) => (
+                    <div key={idx} className="flex justify-between py-2 text-xs font-semibold first:pt-0 last:pb-0">
+                      <span className="text-zinc-800 flex items-center">
+                        <span className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-1 py-0.5 rounded mr-2 text-[10px] font-bold">×{item.quantity}</span>
+                        {item.name}
+                      </span>
+                      <span className="font-mono text-zinc-500">${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Delivery client details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5"><FiUser /> Customer</p>
+                  <p className="text-xs font-bold text-zinc-800">{selectedOrder.address?.firstName} {selectedOrder.address?.lastName}</p>
+                  <p className="text-[10px] text-zinc-500 font-semibold flex items-center gap-1 mt-1"><FiPhone className="text-zinc-400" /> {selectedOrder.address?.phone}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5"><FiMapPin /> Delivery Address</p>
+                  <p className="text-xs text-zinc-650 leading-relaxed font-semibold">
+                    {selectedOrder.address?.street}, {selectedOrder.address?.city}, {selectedOrder.address?.state} {selectedOrder.address?.zipcode}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Action controls */}
+              <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] font-bold text-zinc-405 uppercase tracking-widest">Update State</p>
+                  <p className="text-[10px] text-zinc-450 mt-0.5 font-semibold">Coordinate progress states</p>
+                </div>
+                <div className="flex gap-2">
+                  {["Food Processing", "Out for Delivery", "Delivered"].map((st) => {
+                    const isCurrent = selectedOrder.status === st
+                    return (
+                      <button
+                        key={st}
+                        onClick={() => statusHandler(st, selectedOrder._id)}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-colors ${
+                          isCurrent
+                            ? 'bg-zinc-950 border-zinc-950 text-white shadow-sm'
+                            : 'bg-white border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-800'
+                        }`}
+                      >
+                        {st === "Food Processing" ? "Prepare" : st === "Out for Delivery" ? "Transit" : "Complete"}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-zinc-350 text-center">
+              <FiShoppingBag size={28} className="text-zinc-250 mb-3" />
+              <p className="text-xs font-bold text-zinc-500">No order selected</p>
+              <p className="text-[10px] text-zinc-400 mt-1">Select an order row from the left panel to review details.</p>
+            </div>
+          )}
+        </div>
+
+      </div>
+
+    </div>
+  )
+}
+
+export default Orders

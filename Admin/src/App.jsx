@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Navbar from './components/Navbar/Navbar'
 import Sidebar from './components/Sidebar/Sidebar'
 import { Route, Routes, Navigate } from 'react-router-dom'
@@ -16,12 +16,10 @@ import Banners from './pages/Banners/Banners'
 import Restaurants from './pages/Restaurants/Restaurants'
 import RestaurantProfile from './pages/RestaurantProfile/RestaurantProfile'
 import Reviews from './pages/Reviews/Reviews'
-import VendorRegister from './pages/VendorRegister/VendorRegister'
-import { ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { Toaster } from 'react-hot-toast'
 import { useAdmin } from './context/AdminContext'
 
-// Route guard — redirects to /dashboard when the user's role isn't in allowedRoles
+// Route guard — redirects to /dashboard when user role isn't allowed
 const RouteGuard = ({ children, allowedRoles }) => {
   const { adminRole } = useAdmin()
   if (allowedRoles && !allowedRoles.includes(adminRole)) {
@@ -34,31 +32,49 @@ const App = () => {
   const url = 'http://localhost:4000'
   const { adminToken } = useAdmin()
 
-  // Public route: vendor registration — accessible without a token
-  // We check the path manually so /vendor/register works before login
-  if (window.location.pathname === '/vendor/register') {
-    return (
-      <>
-        <ToastContainer position="top-right" autoClose={3000} toastClassName="rounded-2xl shadow-card border border-slate-100 font-sans text-sm" />
-        <VendorRegister />
-      </>
-    )
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('admin_sidebar_collapsed') === 'true'
+  })
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev
+      localStorage.setItem('admin_sidebar_collapsed', String(next))
+      return next
+    })
   }
 
   if (!adminToken) return (
     <>
-      <ToastContainer position="top-right" autoClose={3000} toastClassName="rounded-2xl shadow-card border border-slate-100 font-sans text-sm" />
+      <Toaster position="top-right" toastOptions={{ className: 'rounded-xl shadow-premium border border-slate-100 text-xs font-semibold' }} />
       <Login />
     </>
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <ToastContainer position="top-right" autoClose={3000} toastClassName="rounded-2xl shadow-card border border-slate-100 font-sans text-sm" />
-      <Navbar />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto p-5 sm:p-8">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col overflow-hidden relative">
+      <Toaster position="top-right" toastOptions={{ className: 'rounded-xl shadow-premium border border-slate-100 text-xs font-semibold' }} />
+      
+      {/* Rebuilt Top Navigation Bar */}
+      <Navbar 
+        sidebarCollapsed={sidebarCollapsed} 
+        toggleSidebar={toggleSidebar} 
+        mobileOpen={mobileOpen} 
+        setMobileOpen={setMobileOpen} 
+      />
+
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Floating Sidebar Navigation */}
+        <Sidebar 
+          sidebarCollapsed={sidebarCollapsed} 
+          toggleSidebar={toggleSidebar} 
+          mobileOpen={mobileOpen} 
+          setMobileOpen={setMobileOpen} 
+        />
+        
+        {/* Page Main Viewport */}
+        <main className="flex-1 overflow-y-auto px-6 py-6 md:px-8 md:py-8 transition-all duration-300">
           <Routes>
             <Route path='/' element={<Navigate to="/dashboard" replace />} />
             <Route path='/dashboard' element={<Dashboard url={url} />} />
@@ -111,8 +127,6 @@ const App = () => {
               </RouteGuard>
             } />
 
-            {/* Public vendor registration — also reachable while logged in */}
-            <Route path='/vendor/register' element={<VendorRegister />} />
 
             {/* Fallback */}
             <Route path='*' element={<Navigate to="/dashboard" replace />} />

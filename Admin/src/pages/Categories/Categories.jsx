@@ -1,213 +1,195 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { FiFolder, FiPlus, FiX, FiInfo, FiLayers, FiDollarSign } from "react-icons/fi";
-import { Card, Badge, Button, Input } from "../../components/ui";
+import React, { useState, useEffect } from "react"
+import axios from "axios"
+import { toast } from "react-hot-toast"
+import { 
+  FiFolder, FiPlus, FiX, FiInfo, FiLayers, FiDollarSign, 
+  FiActivity, FiSliders, FiHeart, FiBox, FiCheck, FiCompass, FiZap 
+} from "react-icons/fi"
+import { Card, Button } from "../../components/ui"
 
 const DEFAULT_CATEGORIES = [
-  { name: "Salad",     emoji: "🥗", color: "border-green-150/45 text-green-700 bg-green-50/10" },
-  { name: "Rolls",     emoji: "🌯", color: "border-amber-150/45 text-amber-705 bg-amber-50/10" },
-  { name: "Deserts",   emoji: "🍰", color: "border-pink-150/45 text-pink-700 bg-pink-50/10" },
-  { name: "Sandwich",  emoji: "🥪", color: "border-yellow-150/45 text-yellow-800 bg-yellow-50/10" },
-  { name: "Cake",      emoji: "🎂", color: "border-purple-150/45 text-purple-700 bg-purple-50/10" },
-  { name: "Pure Veg",  emoji: "🥦", color: "border-emerald-150/45 text-emerald-705 bg-emerald-50/10" },
-  { name: "Pasta",     emoji: "🍝", color: "border-orange-150/45 text-orange-700 bg-orange-50/10" },
-  { name: "Noodles",   emoji: "🍜", color: "border-red-150/45 text-red-700 bg-red-50/10" },
-];
+  { name: "Salad",     color: "border-zinc-200 text-zinc-800 bg-white" },
+  { name: "Rolls",     color: "border-zinc-200 text-zinc-800 bg-white" },
+  { name: "Deserts",   color: "border-zinc-200 text-zinc-800 bg-white" },
+  { name: "Sandwich",  color: "border-zinc-200 text-zinc-800 bg-white" },
+  { name: "Cake",      color: "border-zinc-200 text-zinc-800 bg-white" },
+  { name: "Pure Veg",  color: "border-zinc-200 text-zinc-800 bg-white" },
+  { name: "Pasta",     color: "border-zinc-200 text-zinc-800 bg-white" },
+  { name: "Noodles",   color: "border-zinc-200 text-zinc-800 bg-white" },
+]
 
-const EMOJI_OPTIONS = ["🥗","🌯","🍰","🥪","🎂","🥦","🍝","🍜","🍕","🍔","🌮","🍱","🍛","🥩","🦐","🍣","🥟","🧆","🫕"];
+const CATEGORY_ICONS = {
+  "Salad": <FiActivity size={14} />,
+  "Rolls": <FiSliders size={14} />,
+  "Deserts": <FiHeart size={14} />,
+  "Sandwich": <FiLayers size={14} />,
+  "Cake": <FiBox size={14} />,
+  "Pure Veg": <FiCheck size={14} />,
+  "Pasta": <FiCompass size={14} />,
+  "Noodles": <FiZap size={14} />,
+}
 
 const Categories = ({ url }) => {
-  const [foodList, setFoodList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newCat, setNewCat] = useState({ name: "", emoji: "🍽️" });
+  const [foodList, setFoodList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showAdd, setShowAdd] = useState(false)
+  const [newCat, setNewCat] = useState({ name: "" })
 
   const fetchFoods = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const res = await axios.get(`${url}/api/food/list`);
+      const res = await axios.get(`${url}/api/food/list`)
       if (res.data.success) {
-        setFoodList(res.data.data);
+        setFoodList(res.data.data)
       }
     } catch {}
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   useEffect(() => { 
-    fetchFoods(); 
-  }, []);
+    fetchFoods() 
+  }, [])
 
   const categoryStats = DEFAULT_CATEGORIES.map(cat => ({
     ...cat,
     count: foodList.filter(f => f.category === cat.name).length,
     avgPrice: foodList.filter(f => f.category === cat.name).length
-      ? (foodList.filter(f => f.category === cat.name).reduce((a, b) => a + b.price, 0) / foodList.filter(f => f.category === cat.name).length).toFixed(0)
-      : 0,
-  }));
+      ? (foodList.filter(f => f.category === cat.name).reduce((a, b) => a + b.price, 0) / foodList.filter(f => f.category === cat.name).length).toFixed(2)
+      : "0.00",
+  }))
 
   const handleAddCategory = (e) => {
-    e.preventDefault();
-    if (!newCat.name.trim()) return;
-    toast.info(`Category "${newCat.name}" noted! Add it to categories array in Add.jsx to make it available.`);
-    setShowAdd(false);
-    setNewCat({ name: "", emoji: "🍽️" });
-  };
+    e.preventDefault()
+    if (!newCat.name.trim()) return
+    toast.success(`Category details saved! Add to catalog lists configuration.`)
+    setShowAdd(false)
+    setNewCat({ name: "" })
+  }
+
+  const labelClass = "block text-[9px] font-bold text-zinc-400 uppercase tracking-widest"
+  const inputClass = "w-full px-3 py-2 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-800 focus:outline-none focus:border-zinc-950 transition-all"
 
   return (
-    <div className="max-w-4xl animate-fadeUp space-y-6">
+    <div className="max-w-4xl space-y-6 animate-fadeUp">
       
-      {/* ── Page Header ── */}
-      <div className="flex items-center justify-between">
+      {/* Page Header */}
+      <div className="flex items-center justify-between border-b border-zinc-200/50 pb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-            <FiFolder size={18} />
+          <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200/60 flex items-center justify-center text-zinc-700">
+            <FiFolder size={16} />
           </div>
           <div>
-            <h1 className="font-poppins font-extrabold text-2xl text-slate-900 tracking-tight">Categories</h1>
-            <p className="text-slate-405 text-xs font-semibold">{DEFAULT_CATEGORIES.length} structure groups · {foodList.length} total items</p>
+            <h1 className="text-lg font-bold tracking-tight text-zinc-900">Categories</h1>
+            <p className="text-xs text-zinc-400 font-semibold mt-0.5">{DEFAULT_CATEGORIES.length} active menu structures</p>
           </div>
         </div>
-        <Button 
+        <button 
           onClick={() => setShowAdd(f => !f)}
-          variant="primary" 
-          size="sm"
-          leftIcon={<FiPlus />}
-          className="font-bold shadow-emerald"
+          className="flex items-center gap-1.5 px-3 py-2 bg-zinc-950 hover:bg-zinc-850 text-white text-xs font-bold rounded-xl shadow-sm transition-colors"
         >
-          Add Category
-        </Button>
+          <FiPlus size={13} />
+          <span>Add Category</span>
+        </button>
       </div>
 
-      {/* Add Form Drawer */}
+      {/* Add Drawer */}
       {showAdd && (
-        <Card variant="default" radius="3xl" padding="lg" className="border border-slate-100 shadow-card animate-fadeUp">
-          <h2 className="font-poppins font-bold text-slate-805 text-sm uppercase tracking-wider mb-4">New Category</h2>
+        <Card variant="default" radius="lg" padding="md" className="border border-zinc-200 bg-white shadow-premium animate-fadeUp max-w-sm">
+          <div className="flex justify-between items-center pb-2 border-b border-zinc-100 mb-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-800">Add New Category</h2>
+            <button onClick={() => setShowAdd(false)} className="text-zinc-400 hover:text-zinc-700 text-xs font-bold">Cancel</button>
+          </div>
+          
           <form onSubmit={handleAddCategory} className="space-y-4">
-            
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Input 
-                label="Category Name"
+            <div className="space-y-1.5">
+              <label className={labelClass}>Category Name</label>
+              <input 
                 required
                 value={newCat.name} 
                 onChange={e => setNewCat(c => ({ ...c, name: e.target.value }))} 
-                placeholder="e.g. Burgers" 
+                placeholder="e.g. Burgers, Beverages" 
+                className={inputClass}
               />
-              
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Select Emoji Icon</label>
-                <div className="grid grid-cols-10 gap-1.5 p-1.5 bg-slate-50 border border-slate-100 rounded-2xl">
-                  {EMOJI_OPTIONS.map(em => (
-                    <button 
-                      key={em} 
-                      type="button" 
-                      onClick={() => setNewCat(c => ({ ...c, emoji: em }))}
-                      className={`w-7 h-7 rounded-xl text-sm flex items-center justify-center transition-all ${
-                        newCat.emoji === em 
-                          ? 'bg-emerald-100 ring-2 ring-emerald-400' 
-                          : 'bg-white hover:bg-slate-100 shadow-3xs'
-                      }`}
-                    >
-                      {em}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
-            <div className="p-3 bg-amber-50 border border-amber-100/70 rounded-2xl flex gap-2">
-              <FiInfo className="text-amber-600 mt-0.5 flex-shrink-0" size={14} />
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800 leading-normal">
-                After adding a category here, please insert it in the CATEGORIES array in Admin/src/pages/Add/Add.jsx to support menu creations.
+            <div className="p-3 bg-zinc-50 border border-zinc-150 rounded-xl flex gap-2">
+              <FiInfo className="text-zinc-450 flex-shrink-0 mt-0.5" size={13} />
+              <p className="text-[9px] font-semibold text-zinc-500 leading-normal">
+                To support listings filters, make sure to append the category name in Add.jsx & List.jsx constants.
               </p>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button type="button" onClick={() => setShowAdd(false)} variant="outline" size="md" className="flex-1 font-bold">
-                Cancel
-              </Button>
-              <Button type="submit" variant="primary" size="md" className="flex-1 font-bold shadow-emerald-lg">
-                Add Category
-              </Button>
-            </div>
-
+            <button type="submit" className="w-full py-2 bg-zinc-950 hover:bg-zinc-850 text-white font-bold rounded-lg text-2xs transition-colors">
+              Submit Category
+            </button>
           </form>
         </Card>
       )}
 
-      {/* Categories stats grid */}
+      {/* Categories Cards */}
       {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-32 bg-white rounded-3xl border border-slate-100 animate-pulse" />)}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-white border border-zinc-200 rounded-xl animate-pulse" />)}
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {categoryStats.map((cat, i) => (
-            <Card 
+            <div 
               key={i} 
-              variant="default"
-              radius="2xl"
-              padding="md"
-              className={`border-2 border-slate-100/60 shadow-sm relative overflow-hidden flex flex-col justify-between h-36 hover:-translate-y-1 transition-all duration-300 ${cat.color}`}
+              className="bg-white border border-zinc-200/65 rounded-xl p-4 shadow-premium flex flex-col justify-between h-32 hover:border-zinc-300 transition-colors"
             >
               <div>
-                <span className="text-3xl block mb-2">{cat.emoji}</span>
-                <h3 className="font-poppins font-extrabold text-sm uppercase tracking-wider text-slate-805 leading-none">{cat.name}</h3>
-              </div>
-              <div>
-                <div className="space-y-1 text-slate-500 font-semibold text-2xs uppercase tracking-wider">
-                  <div className="flex justify-between">
-                    <span>Dishes</span>
-                    <span className="font-bold text-slate-900">{cat.count}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Avg Price</span>
-                    <span className="font-bold text-slate-900">${cat.avgPrice}</span>
-                  </div>
+                <div className="w-7 h-7 rounded-lg bg-zinc-50 border border-zinc-150 flex items-center justify-center text-zinc-550 mb-2">
+                  {CATEGORY_ICONS[cat.name] || <FiFolder size={13} />}
                 </div>
-                {/* mini bar */}
-                <div className="mt-2.5 h-1 bg-slate-150/40 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${foodList.length > 0 ? (cat.count / foodList.length) * 100 : 0}%` }} />
+                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wide">{cat.name}</h3>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">
+                  <span>Dishes</span>
+                  <span className="font-mono text-zinc-800 font-bold">{cat.count}</span>
+                </div>
+                <div className="flex justify-between text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">
+                  <span>Avg Price</span>
+                  <span className="font-mono text-zinc-800 font-bold">${cat.avgPrice}</span>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Breakdown percentages */}
+      {/* Distribution Percentages */}
       {!loading && (
-        <Card variant="default" radius="3xl" padding="lg" className="border border-slate-100 shadow-sm">
-          <h2 className="font-poppins font-bold text-slate-805 text-sm uppercase tracking-wider pb-3 border-b border-slate-50 mb-5">
-            Dishes Distribution
+        <div className="bg-white border border-zinc-200/65 rounded-xl p-6 shadow-premium space-y-5">
+          <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider border-b border-zinc-100 pb-3">
+            Menu Distribution
           </h2>
           
           <div className="grid md:grid-cols-2 gap-4">
             {categoryStats.map((cat, i) => {
-              const pct = foodList.length > 0 ? Math.round((cat.count / foodList.length) * 100) : 0;
+              const pct = foodList.length > 0 ? Math.round((cat.count / foodList.length) * 100) : 0
               return (
-                <div key={i} className="flex items-center gap-3 bg-slate-50/50 p-2.5 rounded-2xl border border-slate-100/50">
-                  <span className="text-lg w-7 text-center">{cat.emoji}</span>
-                  <span className="text-xs font-bold text-slate-800 w-24 flex-shrink-0">{cat.name}</span>
+                <div key={i} className="flex items-center gap-3 bg-zinc-50/50 p-3 rounded-xl border border-zinc-200/40">
+                  <span className="text-zinc-450">{CATEGORY_ICONS[cat.name] || <FiFolder size={12} />}</span>
+                  <span className="text-xs font-bold text-zinc-800 w-24 flex-shrink-0">{cat.name}</span>
                   
-                  <div className="flex-1 h-2 bg-slate-100 border border-slate-200/40 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden border border-zinc-150">
                     <div 
-                      className={`h-full rounded-full transition-all duration-700 ${cat.count > 0 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-slate-200'}`}
+                      className="h-full bg-zinc-950 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }} 
                     />
                   </div>
-                  <span className="text-2xs font-mono font-extrabold text-slate-655 w-14 text-right">
-                    {cat.count} ({pct}%)
-                  </span>
+                  
+                  <span className="text-[10px] font-mono font-bold text-zinc-500 w-8 text-right">{pct}%</span>
                 </div>
-              );
+              )
             })}
           </div>
-        </Card>
+        </div>
       )}
-
     </div>
-  );
-};
+  )
+}
 
-export default Categories;
+export default Categories

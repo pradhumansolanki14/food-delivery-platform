@@ -1,19 +1,14 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
-import { FiPlus, FiCamera, FiTrash2, FiTag, FiClock, FiActivity, FiEye, FiCheck } from "react-icons/fi";
-import { Card, Button, Input, Select } from "../../components/ui";
+import React, { useState } from "react"
+import axios from "axios"
+import { toast } from "react-hot-toast"
+import { FiPlus, FiCamera, FiTrash2, FiTag, FiClock, FiActivity, FiCheck, FiFolder } from "react-icons/fi"
+import { Card, Button, Input } from "../../components/ui"
 
-const CATEGORIES = ["Salad", "Rolls", "Deserts", "Sandwich", "Cake", "Pure Veg", "Pasta", "Noodles"];
-
-const categoryEmoji = {
-  Salad: "🥗", Rolls: "🌯", Deserts: "🍰", Sandwich: "🥪",
-  Cake: "🎂", "Pure Veg": "🥦", Pasta: "🍝", Noodles: "🍜",
-};
+const CATEGORIES = ["Salad", "Rolls", "Deserts", "Sandwich", "Cake", "Pure Veg", "Pasta", "Noodles"]
 
 const Add = ({ url }) => {
-  const [image, setImage] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [data, setData] = useState({ 
     name: "", 
     description: "", 
@@ -23,42 +18,42 @@ const Add = ({ url }) => {
     isVeg: false,
     calories: "",
     tags: ""
-  });
+  })
 
   const onChangeHandler = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target
     setData(d => ({ 
       ...d, 
       [name]: type === 'checkbox' ? checked : value 
-    }));
-  };
+    }))
+  }
 
   const onSubmitHandler = async (event) => {
-    event.preventDefault();
+    event.preventDefault()
     if (!image) {
-      toast.error("Dish photo is required");
-      return;
+      toast.error("Dish photo is required")
+      return
     }
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("description", data.description);
-    formData.append("price", Number(data.price));
-    formData.append("category", data.category);
-    formData.append("image", image);
+    setLoading(true)
+    const formData = new FormData()
+    formData.append("name", data.name)
+    formData.append("description", data.description)
+    formData.append("price", Number(data.price))
+    formData.append("category", data.category)
+    formData.append("image", image)
     
-    // Add additional backend fields
-    formData.append("preparationTime", Number(data.preparationTime));
-    formData.append("isVeg", data.isVeg);
-    if (data.calories) formData.append("calories", Number(data.calories));
+    // Additional attributes
+    formData.append("preparationTime", Number(data.preparationTime))
+    formData.append("isVeg", data.isVeg)
+    if (data.calories) formData.append("calories", Number(data.calories))
     if (data.tags) {
-      const parsedTags = data.tags.split(',').map(t => t.trim()).filter(Boolean);
-      parsedTags.forEach(t => formData.append("tags", t));
+      const parsedTags = data.tags.split(',').map(t => t.trim()).filter(Boolean)
+      parsedTags.forEach(t => formData.append("tags", t))
     }
 
     try {
-      const token = localStorage.getItem("adminToken");
-      const response = await axios.post(`${url}/api/food/add`, formData, { headers: { token } });
+      const token = localStorage.getItem("adminToken")
+      const response = await axios.post(`${url}/api/food/add`, formData, { headers: { token } })
       if (response.data.success) {
         setData({ 
           name: "", 
@@ -69,60 +64,64 @@ const Add = ({ url }) => {
           isVeg: false,
           calories: "",
           tags: ""
-        });
-        setImage(false);
-        toast.success(response.data.message || "Dish successfully created!");
+        })
+        setImage(false)
+        toast.success(response.data.message || "Dish successfully created!")
       } else {
-        toast.error(response.data.message);
+        toast.error(response.data.message || "Could not save details")
       }
     } catch (err) {
-      toast.error("Could not add new food item.");
+      toast.error("Could not add new food item.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const formSectionClass = "bg-white p-6 rounded-2xl border border-zinc-200/50 shadow-premium space-y-5"
+  const labelClass = "block text-[10px] font-bold text-zinc-450 uppercase tracking-widest"
+  const inputClass = "w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 bg-white text-xs text-zinc-800 placeholder-zinc-450 focus:outline-none focus:border-zinc-950 focus:ring-1 focus:ring-zinc-950 transition-all"
 
   return (
-    <div className="max-w-2xl animate-fadeUp">
+    <div className="max-w-2xl mx-auto space-y-6">
       
-      {/* ── Page Header ── */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100/35 flex items-center justify-center text-emerald-600">
-            <FiPlus size={18} />
-          </div>
-          <div>
-            <h1 className="font-poppins font-extrabold text-2xl text-slate-900 tracking-tight">Add New Dish</h1>
-            <p className="text-slate-400 text-xs font-semibold">Expose new items to your restaurant catalog</p>
-          </div>
+      {/* Page Header */}
+      <div className="flex items-center gap-3 border-b border-zinc-200/50 pb-5">
+        <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200/60 flex items-center justify-center text-zinc-700">
+          <FiPlus size={16} />
+        </div>
+        <div>
+          <h1 className="text-lg font-bold tracking-tight text-zinc-900">Add Product</h1>
+          <p className="text-xs text-zinc-400 font-semibold mt-0.5">Expose new items to your restaurant storefront catalog</p>
         </div>
       </div>
 
       <form onSubmit={onSubmitHandler} className="space-y-6">
         
-        {/* Image upload */}
-        <Card variant="default" radius="2xl" padding="lg" className="border border-slate-100 shadow-sm">
-          <label className="text-[10px] font-bold text-slate-405 uppercase tracking-widest block mb-4">Dish Photo *</label>
+        {/* Upload card container */}
+        <div className={formSectionClass}>
+          <label className={labelClass}>Dish Visual Photo *</label>
           
           <label htmlFor="image" className="cursor-pointer block">
-            <div className={`relative w-full h-48 rounded-2xl border-2 border-dashed transition-all duration-300 overflow-hidden group ${
-              image ? 'border-emerald-305 bg-emerald-50/5' : 'border-slate-205 hover:border-emerald-450 bg-slate-50/50 hover:bg-emerald-50/10'
+            <div className={`relative w-full h-44 rounded-xl border border-dashed transition-all duration-200 flex flex-col items-center justify-center p-6 ${
+              image 
+                ? 'border-emerald-500 bg-emerald-50/10' 
+                : 'border-zinc-300 bg-zinc-50 hover:bg-zinc-100/50 hover:border-zinc-450'
             }`}>
               {image ? (
                 <>
-                  <img src={URL.createObjectURL(image)} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <img src={URL.createObjectURL(image)} alt="Preview" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
                     <span className="text-white text-xs font-bold uppercase tracking-wider">Change photo</span>
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100/50 flex items-center justify-center text-slate-400 border border-slate-200/50">
-                    <FiCamera size={20} />
+                <div className="text-center space-y-3 flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-lg bg-white border border-zinc-250/30 flex items-center justify-center text-zinc-400 shadow-3xs">
+                    <FiCamera size={16} />
                   </div>
-                  <div className="text-center">
-                    <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">Drop photo or browse</p>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-1">PNG, JPG or WEBP up to 5MB</p>
+                  <div>
+                    <p className="text-xs font-bold text-zinc-700">Click to upload product image</p>
+                    <p className="text-[10px] text-zinc-400 font-semibold mt-1">PNG, JPG or WEBP (max 5MB)</p>
                   </div>
                 </div>
               )}
@@ -134,136 +133,160 @@ const Add = ({ url }) => {
             <button 
               type="button" 
               onClick={() => setImage(false)}
-              className="mt-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-500 hover:text-rose-700 transition-colors p-1"
+              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-rose-500 hover:text-rose-700 transition-colors"
             >
-              <FiTrash2 size={12} />
-              <span>Remove photo</span>
+              <FiTrash2 size={11} />
+              <span>Remove attachment</span>
             </button>
           )}
-        </Card>
+        </div>
 
-        {/* Basic description */}
-        <Card variant="default" radius="2xl" padding="lg" className="border border-slate-100 shadow-sm space-y-4">
-          <h2 className="font-poppins font-bold text-slate-850 text-sm uppercase tracking-wider pb-2 border-b border-slate-50">Dish Details</h2>
+        {/* Section 2: Details */}
+        <div className={formSectionClass}>
+          <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wide border-b border-zinc-100 pb-2 mb-1">Product Details</h3>
           
-          <Input
-            label="Dish Name"
-            name="name"
-            required
-            onChange={onChangeHandler}
-            value={data.name}
-            placeholder="e.g. Grilled Caesar Salad"
-          />
+          <div className="space-y-1.5">
+            <label className={labelClass}>Product Name</label>
+            <input 
+              name="name"
+              value={data.name}
+              onChange={onChangeHandler}
+              required
+              placeholder="e.g. Garlic Herb Pasta"
+              className={inputClass}
+            />
+          </div>
 
-          <div>
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Description *</label>
+          <div className="space-y-1.5">
+            <label className={labelClass}>Product Description</label>
             <textarea 
               name="description"
-              required
-              onChange={onChangeHandler}
               value={data.description}
-              rows={3} 
-              className="w-full px-4 py-3 bg-white border-2 border-slate-100 focus:border-emerald-455 rounded-2xl text-sm text-slate-900 placeholder-slate-400 outline-none transition-all duration-300 resize-none"
-              placeholder="Describe the ingredients, flavor profile, and portion sizing..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label="Category"
-              name="category"
-              value={data.category}
               onChange={onChangeHandler}
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{categoryEmoji[cat] || "🍔"} {cat}</option>
-              ))}
-            </Select>
-            <Input
-              label="Price (USD)"
-              name="price"
               required
-              type="number"
-              min="0.5"
-              step="0.01"
-              onChange={onChangeHandler}
-              value={data.price}
-              placeholder="0.00"
-            />
-          </div>
-        </Card>
-
-        {/* Exposing Additional details */}
-        <Card variant="default" radius="2xl" padding="lg" className="border border-slate-100 shadow-sm space-y-4">
-          <h2 className="font-poppins font-bold text-slate-850 text-sm uppercase tracking-wider pb-2 border-b border-slate-50">Additional Attributes</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Prep Time (minutes)"
-              name="preparationTime"
-              type="number"
-              min="1"
-              leftIcon={<FiClock size={14} />}
-              onChange={onChangeHandler}
-              value={data.preparationTime}
-            />
-            <Input
-              label="Calories (kcal)"
-              name="calories"
-              type="number"
-              min="0"
-              leftIcon={<FiActivity size={14} />}
-              onChange={onChangeHandler}
-              value={data.calories}
-              placeholder="e.g. 350"
+              placeholder="Detailed description of flavors, ingredients, allergens, or preparation details..."
+              rows={3}
+              className={`${inputClass} resize-none`}
             />
           </div>
 
-          <Input
-            label="Tags (comma-separated)"
-            name="tags"
-            leftIcon={<FiTag size={14} />}
-            onChange={onChangeHandler}
-            value={data.tags}
-            placeholder="e.g. Spicy, Recommended, Chef Special"
-          />
-
-          {/* Veg/Non-veg toggle selector */}
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-150/45 rounded-2xl">
-            <div>
-              <p className="text-xs font-bold text-slate-800 uppercase tracking-wide">Pure Vegetarian Indicator</p>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Is this dish fully vegetarian-compliant?</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className={labelClass}>Category Catalog</label>
+              <select
+                name="category"
+                value={data.category}
+                onChange={onChangeHandler}
+                className={inputClass}
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
-            <button 
+            
+            <div className="space-y-1.5">
+              <label className={labelClass}>Price (USD)</label>
+              <input 
+                name="price"
+                type="number"
+                min="0.5"
+                step="0.01"
+                value={data.price}
+                onChange={onChangeHandler}
+                required
+                placeholder="0.00"
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Parameters */}
+        <div className={formSectionClass}>
+          <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wide border-b border-zinc-100 pb-2 mb-1">Additional Parameters</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className={labelClass}>Prep Time (Mins)</label>
+              <div className="relative flex items-center">
+                <FiClock className="absolute left-3 text-zinc-400" size={13} />
+                <input 
+                  name="preparationTime"
+                  type="number"
+                  min="1"
+                  value={data.preparationTime}
+                  onChange={onChangeHandler}
+                  className={`${inputClass} pl-8`}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className={labelClass}>Calories (Kcal)</label>
+              <div className="relative flex items-center">
+                <FiActivity className="absolute left-3 text-zinc-400" size={13} />
+                <input 
+                  name="calories"
+                  type="number"
+                  min="0"
+                  value={data.calories}
+                  onChange={onChangeHandler}
+                  placeholder="e.g. 240"
+                  className={`${inputClass} pl-8`}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className={labelClass}>Tags (comma-separated)</label>
+            <div className="relative flex items-center">
+              <FiTag className="absolute left-3 text-zinc-400" size={13} />
+              <input 
+                name="tags"
+                value={data.tags}
+                onChange={onChangeHandler}
+                placeholder="e.g. Organic, Recommended, Gluten Free"
+                className={`${inputClass} pl-8`}
+              />
+            </div>
+          </div>
+
+          {/* Toggle Switches */}
+          <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-xl border border-zinc-200">
+            <div>
+              <p className="text-xs font-bold text-zinc-800">Vegetarian Compliant</p>
+              <p className="text-[10px] text-zinc-450 mt-0.5 font-semibold">Flag this item as safe for vegetarians</p>
+            </div>
+            
+            <button
               type="button"
               onClick={() => setData(d => ({ ...d, isVeg: !d.isVeg }))}
-              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all border ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-bold text-[10px] uppercase tracking-wider transition-colors ${
                 data.isVeg 
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-700" 
-                  : "bg-slate-100 border-slate-200 text-slate-500"
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                  : 'bg-white border-zinc-250 text-zinc-500'
               }`}
             >
-              <div className={`relative w-8 h-4 rounded-full transition-colors ${data.isVeg ? "bg-emerald-500" : "bg-slate-350"}`}>
-                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${data.isVeg ? "translate-x-4.5" : "translate-x-0.5"}`} />
-              </div>
-              <span>{data.isVeg ? "Veg" : "Non-Veg"}</span>
+              {data.isVeg && <FiCheck size={11} />}
+              <span>{data.isVeg ? 'Vegetarian' : 'Standard'}</span>
             </button>
           </div>
-        </Card>
+        </div>
 
         {/* Submit */}
-        <Button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={loading}
-          variant="primary"
-          size="lg"
-          className="w-full font-bold shadow-emerald-lg h-12.5"
+          className="w-full py-3.5 bg-zinc-950 hover:bg-zinc-850 text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
         >
-          {loading ? "Adding to Menu..." : "Add to Catalog Menu"}
-        </Button>
+          {loading ? "Adding to catalog..." : "Publish Product"}
+        </button>
+
       </form>
     </div>
-  );
-};
+  )
+}
 
-export default Add;
+export default Add

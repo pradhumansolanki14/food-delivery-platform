@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;605;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,49 +10,99 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    border-color: #f1f5f9; /* Slate 100 default border */
   }
+
   body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f8fafc;
-    color: #0f172a;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #fafafa; /* Modern Vercel white background */
+    color: #09090b; /* Zinc 950 text */
   }
-  a { text-decoration: none; color: inherit; }
+
+  /* Mono font helper */
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
 }
 
 @layer utilities {
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-  .font-display { font-family: 'Syne', sans-serif; }
-  .text-gradient {
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  
+  /* Modern premium borders */
+  .border-thin {
+    border: 1px solid rgba(9, 9, 11, 0.05);
   }
-  .btn-primary {
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    transition: all 0.2s ease;
+  
+  /* Vercel card shadow styles */
+  .shadow-premium {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 
+                0 1px 2px -1px rgba(0, 0, 0, 0.03), 
+                0 0 0 1px rgba(9, 9, 11, 0.04);
   }
-  .btn-primary:hover {
+
+  .shadow-premium-hover {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .shadow-premium-hover:hover {
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.03), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.02), 
+                0 0 0 1px rgba(9, 9, 11, 0.08);
     transform: translateY(-1px);
-    box-shadow: 0 8px 25px -5px rgba(249, 115, 22, 0.5);
+  }
+
+  /* Linear active element highlights */
+  .nav-active-bg {
+    background: rgba(9, 9, 11, 0.03);
+    border-color: rgba(9, 9, 11, 0.05);
+  }
+
+  /* Mono pricing style helper */
+  .price-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
   }
 }
 
+/* Animations */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes rotate {
-  100% { transform: rotate(360deg); }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
-.animate-fadeUp { animation: fadeUp 0.5s ease forwards; }
-.animate-fadeIn { animation: fadeIn 0.3s ease forwards; }
-.delay-100 { animation-delay: 0.1s; }
-.delay-200 { animation-delay: 0.2s; }
-.delay-300 { animation-delay: 0.3s; }
+.animate-fadeUp { animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fadeIn { animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-scaleIn { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slideInLeft { animation: slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+.delay-75 { animation-delay: 75ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-225 { animation-delay: 225ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Custom slider/toggle switch rules */
+.toggle-switch-checkbox:checked + .toggle-switch-label {
+  background-color: #10b981;
+}
+.toggle-switch-checkbox:checked + .toggle-switch-label .toggle-switch-dot {
+  transform: translateX(100%);
+}
