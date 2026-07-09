@@ -34,7 +34,6 @@ const NAV_ITEMS = [
   { label: "Discover",         path: "/",                  exact: true,  icon: <FiStar size={14} /> },
   { label: "Restaurants",      path: "/restaurants",       exact: false, icon: <FiGrid size={14} /> },
   { label: "Offers",           path: "/menu",              exact: false, icon: <FiZap size={14} /> },
-  { label: "Become a Partner", path: "/become-a-partner",  exact: false, icon: <FiUser size={14} /> },
 ];
 
 /* ────────────────────────────────────────────────────────────
