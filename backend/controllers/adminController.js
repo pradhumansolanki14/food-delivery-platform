@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import adminModel from "../models/adminModel.js";
 import restaurantModel, { generateUniqueSlug } from "../models/restaurantModel.js";
+import cuisineModel from "../models/cuisineModel.js";
 import userModel from "../models/userModel.js";
 import orderModel from "../models/orderModel.js";
 import settingsModel from "../models/settingsModel.js";
@@ -93,6 +94,23 @@ const registerVendor = async (req, res) => {
     }], { session });
     const vendor = vendorDocs[0];
 
+    // Resolve cuisineIds from the cuisine string if any
+    let matchedCuisineIds = [];
+    if (cuisine) {
+      try {
+        const allCuisines = await cuisineModel.find({ isActive: true }).session(session);
+        const parts = cuisine.split(/[,\s·/&]+/i).map(x => x.trim().toLowerCase()).filter(Boolean);
+        for (const c of allCuisines) {
+          const cNameLower = c.name.toLowerCase();
+          if (parts.includes(cNameLower) || cuisine.toLowerCase().includes(cNameLower)) {
+            matchedCuisineIds.push(c._id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to sync cuisineIds on registration:", err);
+      }
+    }
+
     // Step 2: Create restaurant profile linked to vendor
     const slug = await generateUniqueSlug(restaurantName);
     const restaurantDocs = await restaurantModel.create([{
@@ -101,6 +119,7 @@ const registerVendor = async (req, res) => {
       slug,
       description: restaurantDescription || "",
       cuisine: cuisine || "",
+      cuisineIds: matchedCuisineIds,
       address: address || "",
       phone: phone || "",
       email,

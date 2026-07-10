@@ -1,6 +1,7 @@
 import foodModel from "../models/foodModel.js";
 import restaurantModel from "../models/restaurantModel.js";
 import foodReviewModel from "../models/foodReviewModel.js";
+import cuisineModel from "../models/cuisineModel.js";
 import fs from "fs";
 
 // ─── Add food (vendor adds to their restaurant) ──────────────
@@ -217,9 +218,17 @@ const listRestaurants = async (req, res) => {
   try {
     const filter = { isApproved: true };
     
-    // Filter by cuisineId (restaurant has this cuisine in cuisineIds array)
+    // Filter by cuisineId (restaurant has this cuisine in cuisineIds array or matches by name)
     if (req.query.cuisineId) {
-      filter.cuisineIds = req.query.cuisineId;
+      const cuisineDoc = await cuisineModel.findById(req.query.cuisineId);
+      if (cuisineDoc) {
+        filter.$or = [
+          { cuisineIds: req.query.cuisineId },
+          { cuisine: { $regex: new RegExp(cuisineDoc.name, 'i') } }
+        ];
+      } else {
+        filter.cuisineIds = req.query.cuisineId;
+      }
     }
     
     // Filter by featured flag

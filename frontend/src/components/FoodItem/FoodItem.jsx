@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiHeart, FiPlus, FiMinus, FiStar, FiClock, FiActivity, FiX, FiEye, FiArrowRight } from 'react-icons/fi';
 import { StoreContext } from '../../context/StoreContext';
-import { Card, Button, Badge } from '../ui';
+import { Card, Button, Badge, FoodTypeIcon } from '../ui';
 
 const FoodItem = ({ 
   id, 
@@ -155,55 +155,50 @@ const FoodItem = ({
             </div>
           )}
 
+          {/* Bottom shadow fade overlay gradient */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none z-0" />
+
           {/* Floating Category tag at bottom-right */}
-          <div className="absolute bottom-3 right-3 z-10">
-            <span className="px-2 py-0.5 bg-slate-900/60 backdrop-blur-xs text-[9px] font-bold text-white uppercase tracking-wider rounded-md">
+          <div className="absolute bottom-3.5 right-3.5 z-10">
+            <span className="px-2 py-0.5 bg-white/15 backdrop-blur-xs text-[9px] font-extrabold text-white/90 uppercase tracking-wider rounded-md border border-white/5 shadow-2xs">
               {category}
             </span>
           </div>
 
-          {/* Floating Veg/Non-veg Status Box at bottom-left */}
-          <div className="absolute bottom-3 left-3 z-10">
-            <div className={`w-5 h-5 rounded-md border-2 bg-white/95 flex items-center justify-center shadow-xs ${
-              isVeg ? 'border-emerald-500' : 'border-rose-500'
-            }`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${
-                isVeg ? 'bg-emerald-500' : 'bg-rose-500'
-              }`} />
+          {/* Restaurant logo and name overlaying bottom-left of image */}
+          {typeof restaurantId === 'object' && restaurantId?.name && (
+            <div 
+              onClick={handleRestaurantNav}
+              className="absolute bottom-3.5 left-3.5 z-10 flex flex-col items-start gap-1.5 cursor-pointer hover:opacity-90 transition-all duration-200"
+            >
+              {restaurantId.logo ? (
+                <img 
+                  src={`${url}/images/${restaurantId.logo}`}
+                  alt={restaurantId.name}
+                  className="w-12 h-12 rounded-full object-cover border border-white/40 shadow-xs"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-sm text-white font-extrabold uppercase border border-white/40 shadow-xs">
+                  {restaurantId.name.charAt(0)}
+                </div>
+              )}
+              <span className="text-xs font-black text-white uppercase tracking-wider drop-shadow-xs">
+                {restaurantId.name}
+              </span>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ── Content details area ── */}
         <div className="p-5 flex-1 flex flex-col justify-between">
           <div>
-            {/* Restaurant Avatar & Tag */}
-            {typeof restaurantId === 'object' && restaurantId?.name && (
-              <div 
-                onClick={handleRestaurantNav}
-                className="flex items-center gap-1.5 mb-2 cursor-pointer hover:opacity-85 group/rest w-fit"
-              >
-                {restaurantId.logo ? (
-                  <img 
-                    src={`${url}/images/${restaurantId.logo}`}
-                    alt={restaurantId.name}
-                    className="w-5 h-5 rounded-full object-cover border border-slate-105 shadow-2xs"
-                  />
-                ) : (
-                  <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center text-[10px] text-emerald-600 font-extrabold uppercase">
-                    {restaurantId.name.charAt(0)}
-                  </div>
-                )}
-                <span className="text-[10px] font-bold text-slate-400 group-hover/rest:text-emerald-600 uppercase tracking-wider transition-colors duration-200">
-                  {restaurantId.name}
-                </span>
-              </div>
-            )}
-
-            {/* Food Name */}
-            <h3 className="font-poppins font-extrabold text-slate-900 text-sm leading-snug line-clamp-1 mb-1 group-hover:text-emerald-600 transition-colors duration-300">
-              {highlightText(name, searchQuery)}
-            </h3>
+            {/* Food Name & classification symbol aligned in same row */}
+            <div className="flex items-start justify-between gap-3 mb-1">
+              <h3 className="font-poppins font-extrabold text-slate-900 text-lg leading-snug line-clamp-1 group-hover:text-emerald-600 transition-colors duration-300">
+                {highlightText(name, searchQuery)}
+              </h3>
+              <FoodTypeIcon isVeg={isVeg} className="flex-shrink-0 shadow-xs mt-0.5" />
+            </div>
 
             {/* Description */}
             <p className="text-slate-400 text-xs font-medium leading-relaxed line-clamp-2 mb-3.5">
@@ -212,19 +207,19 @@ const FoodItem = ({
 
             {/* Metrics Chips line */}
             <div className="flex items-center gap-2 mb-4 border-t border-slate-50 pt-3">
-              <span className="flex items-center gap-1 text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100/50">
-                <FiClock size={10} className="text-emerald-500" />
+              <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100/50">
+                <FiClock size={11} className="text-emerald-500" />
                 {preparationTime} mins
               </span>
               {calories && (
-                <span className="flex items-center gap-1 text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100/50">
-                  <FiActivity size={10} className="text-emerald-500" />
+                <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100/50">
+                  <FiActivity size={11} className="text-emerald-500" />
                   {calories} kcal
                 </span>
               )}
               {averageRating > 0 && (
-                <span className="flex items-center gap-1 text-[9px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100/50">
-                  <FiStar size={10} className="text-amber-500 fill-amber-500" />
+                <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100/50">
+                  <FiStar size={11} className="text-amber-500 fill-amber-500" />
                   {reviewCount} review{reviewCount !== 1 ? 's' : ''}
                 </span>
               )}

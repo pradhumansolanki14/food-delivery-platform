@@ -1,4 +1,5 @@
 import restaurantModel, { generateUniqueSlug } from "../models/restaurantModel.js";
+import cuisineModel from "../models/cuisineModel.js";
 import fs from "fs";
 
 // ─── Vendor: get own restaurant profile ──────────────────────
@@ -54,6 +55,24 @@ const updateRestaurantProfile = async (req, res) => {
         restaurant[field] = req.body[field];
       }
     });
+
+    // Keep cuisineIds synced with cuisine text updates
+    if (req.body.cuisine !== undefined) {
+      try {
+        const allCuisines = await cuisineModel.find({ isActive: true });
+        const parts = req.body.cuisine.split(/[,\s·/&]+/i).map(x => x.trim().toLowerCase()).filter(Boolean);
+        const matchedCuisineIds = [];
+        for (const c of allCuisines) {
+          const cNameLower = c.name.toLowerCase();
+          if (parts.includes(cNameLower) || req.body.cuisine.toLowerCase().includes(cNameLower)) {
+            matchedCuisineIds.push(c._id);
+          }
+        }
+        restaurant.cuisineIds = matchedCuisineIds;
+      } catch (err) {
+        console.error("Failed to sync cuisineIds on update:", err);
+      }
+    }
 
     // Handle logo upload
     if (req.files?.logo?.[0]) {

@@ -15,6 +15,7 @@ import categoryRouter from "./routes/categoryRoute.js";
 import cuisineRouter from "./routes/cuisineRoute.js";
 import bannerRouter from "./routes/bannerRoute.js";
 import restaurantRouter from "./routes/restaurantRoute.js";
+import searchRouter from "./routes/searchRoute.js";
 import settingsModel from "./models/settingsModel.js";
 import fs from "fs";
 
@@ -82,6 +83,7 @@ app.use("/api/categories", categoryRouter);
 app.use("/api/cuisines", cuisineRouter);
 app.use("/api/banners", bannerRouter);
 app.use("/api/admin/restaurant", restaurantRouter);
+app.use("/api/search",   searchRouter);
 
 app.get("/", (req, res) => res.send("API Working"));
 
@@ -141,6 +143,41 @@ try {
       }
     } catch (err) {
       console.error("Failed to run ratings auto-synchronization:", err);
+    }
+
+    // Restaurant cuisines auto-sync check on boot
+    try {
+      const restaurantModel = (await import("./models/restaurantModel.js")).default;
+      const cuisineModel = (await import("./models/cuisineModel.js")).default;
+      const allRestaurants = await restaurantModel.find({});
+      const allCuisines = await cuisineModel.find({ isActive: true });
+      
+      for (const r of allRestaurants) {
+        if (!r.cuisine) continue;
+        
+        // Parse cuisines from the string (e.g. "Indian, Italian" -> ["indian", "italian"])
+        const parts = r.cuisine.split(/[,\s·/&]+/i).map(x => x.trim().toLowerCase()).filter(Boolean);
+        const matchedCuisineIds = [];
+        
+        for (const c of allCuisines) {
+          const cNameLower = c.name.toLowerCase();
+          if (parts.includes(cNameLower) || r.cuisine.toLowerCase().includes(cNameLower)) {
+            matchedCuisineIds.push(c._id);
+          }
+        }
+        
+        // Check if we need to update
+        const existingIdsStr = (r.cuisineIds || []).map(id => id.toString()).sort().join(",");
+        const newIdsStr = matchedCuisineIds.map(id => id.toString()).sort().join(",");
+        
+        if (existingIdsStr !== newIdsStr) {
+          r.cuisineIds = matchedCuisineIds;
+          await r.save();
+          console.log(`[DB Migration] Synchronized cuisineIds for "${r.name}": [${matchedCuisineIds.length} cuisines matched]`);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to run cuisines auto-synchronization:", err);
     }
 
   app.listen(port, () => console.log(`Server started on http://localhost:${port}`));

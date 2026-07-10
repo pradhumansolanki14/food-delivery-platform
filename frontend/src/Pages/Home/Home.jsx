@@ -14,6 +14,7 @@ import BannerCarousel from '../../components/BannerCarousel/BannerCarousel';
 import { Button, Container, Card, Skeleton } from '../../components/ui';
 import { BRAND } from '../../constants/brand';
 import ReviewsWidget from '../../components/Reviews/ReviewsWidget';
+import { toast } from 'react-hot-toast';
 
 // ─── Shared Dynamic Location Selector for Search Centerpiece ───
 const HomeLocationSelector = ({ url, token }) => {
@@ -130,9 +131,9 @@ const Hero = ({ setShowLogin }) => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      navigate(`/menu?search=${encodeURIComponent(searchQuery)}`);
     } else {
-      navigate('/search');
+      navigate('/menu');
     }
   };
 
@@ -319,15 +320,32 @@ const Hero = ({ setShowLogin }) => {
 // ─── Popular Categories Quick List Bar ──────────────────────
 const PopularCategories = () => {
   const navigate = useNavigate();
+  const { url } = useContext(StoreContext);
+  const [trends, setTrends] = useState([]);
+
+  useEffect(() => {
+    const fetchTrends = async () => {
+      try {
+        const res = await axios.get(`${url}/api/search/trending`);
+        if (res.data.success) {
+          setTrends(res.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching trending searches:", err);
+      }
+    };
+    fetchTrends();
+  }, [url]);
+
   return (
     <section className="bg-slate-50 border-y border-slate-100 py-6">
       <Container>
         <div className="flex items-center gap-4 overflow-x-auto pb-1.5 scrollbar-hide">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Trending Searches:</span>
-          {["Burgers", "Pizza", "Noodles", "Salads", "Desserts", "Wraps", "Cake"].map((c, i) => (
+          {trends.map((c, i) => (
             <button
               key={i}
-              onClick={() => navigate(`/menu?category=${c}`)}
+              onClick={() => navigate(`/search?q=${c}`)}
               className="flex-shrink-0 px-4 py-2 bg-white border border-slate-200/80 hover:border-emerald-300 text-xs font-bold text-slate-600 hover:text-emerald-600 rounded-xl transition-all duration-200 shadow-sm"
             >
               {c}
@@ -387,11 +405,11 @@ const CategoriesSection = () => {
 
         {/* Loading skeletons */}
         {loading && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+          <div className="flex gap-5 sm:gap-8 overflow-x-auto py-4 pb-6 scrollbar-hide">
             {[1,2,3,4,5,6,7,8].map(i => (
-              <div key={i} className="flex flex-col items-center gap-3.5 p-4 rounded-3xl border border-slate-100 bg-slate-50 animate-pulse">
-                <div className="w-16 h-16 rounded-2xl bg-slate-200" />
-                <div className="h-3 w-14 rounded bg-slate-200" />
+              <div key={i} className="flex flex-col items-center gap-3 flex-shrink-0 animate-pulse min-w-[96px] md:min-w-[128px] lg:min-w-[144px]">
+                <div className="w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full bg-slate-100" />
+                <div className="h-3.5 w-16 rounded bg-slate-100 mt-2" />
               </div>
             ))}
           </div>
@@ -406,30 +424,33 @@ const CategoriesSection = () => {
           </div>
         )}
 
-        {/* Dynamic category grid */}
+        {/* Swiggy/Zomato style category scroll strip */}
         {!loading && featuredCategories.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+          <div className="flex gap-5 sm:gap-8 overflow-x-auto py-4 pb-6 scrollbar-hide">
             {featuredCategories.map((item) => (
               <motion.button
                 key={item._id}
-                whileHover={{ y: -5, scale: 1.02 }}
+                whileHover={{ y: -6 }}
                 onClick={() => navigate(`/menu?category=${item.name}`)}
-                className="group flex flex-col items-center gap-3.5 p-4 rounded-3xl border border-slate-100/60 bg-slate-50 hover:bg-white hover:border-emerald-250 hover:shadow-[0_15px_30px_rgba(16,185,129,0.05)] transition-all duration-300"
+                className="group flex flex-col items-center gap-3 focus:outline-none flex-shrink-0 min-w-[96px] md:min-w-[128px] lg:min-w-[144px]"
               >
-                <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden shadow-sm bg-white">
-                  {item.image ? (
-                    <img
-                      src={`${url}/images/${item.image}`}
-                      alt={item.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
-                      <FiPackage size={22} />
-                    </div>
-                  )}
+                {/* Double nested container to completely prevent subpixel browser border clipping on rounded-full overflow */}
+                <div className="w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full border-2 border-slate-100/50 group-hover:border-emerald-500 shadow-sm transition-all duration-300 bg-white p-0.5 flex-shrink-0 flex items-center justify-center">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white">
+                    {item.image ? (
+                      <img
+                        src={`${url}/images/${item.image}`}
+                        alt={item.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
+                        <FiPackage size={28} />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span className="text-xs font-bold text-slate-700 group-hover:text-emerald-600 tracking-tight text-center">
+                <span className="text-[11px] font-extrabold text-slate-700 group-hover:text-emerald-600 transition-colors tracking-tight text-center uppercase">
                   {item.name}
                 </span>
               </motion.button>
@@ -631,74 +652,138 @@ const FeaturedFoods = () => {
   );
 };
 
-// ─── Special Offers Section ─────────────────────────────────
-const SpecialOffers = () => {
-  const navigate = useNavigate();
-  const offers = [
-    {
-      title: "First Order Special",
-      desc: "Get free delivery plus 20% discount on orders above ₹199.",
-      code: "WELCOME20",
-      gradient: "from-emerald-500 to-teal-600",
-      badge: "Save 20%",
-    },
-    {
-      title: "Midweek Feast Boost",
-      desc: "Enjoy double reward points and surprise loyalty gifts.",
-      code: "FEASTWEEK",
-      gradient: "from-teal-600 to-cyan-600",
-      badge: "2x Points",
-    },
-  ];
+const CouponTicketCard = ({ coupon }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(coupon.code);
+    setCopied(true);
+    toast.success(`Coupon code ${coupon.code} copied!`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const isPercent = coupon.discountType === "percent";
 
   return (
-    <section className="py-24 bg-slate-50 border-y border-slate-100">
+    <div className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-3xl p-5 sm:p-6 flex items-stretch shadow-md hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
+      {/* Semi-circle notch decorations on left and right borders of the ticket (match bg-slate-50) */}
+      <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-50 z-10" />
+      <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-50 z-10" />
+
+      {/* Main Left Side of Ticket */}
+      <div className="flex-1 pr-6 flex flex-col justify-between min-w-0">
+        <div>
+          <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/20 text-white text-[10px] font-black uppercase rounded-lg tracking-wider mb-2.5">
+            {isPercent ? `${coupon.discount}% Discount` : `₹${coupon.discount} Discount`}
+          </div>
+          <h3 className="font-poppins font-black text-white text-base leading-tight">
+            {isPercent ? `Save ${coupon.discount}% Off` : `₹${coupon.discount} Flat Off`}
+          </h3>
+          <p className="text-xs text-white/80 font-semibold leading-relaxed mt-1.5 line-clamp-2">
+            {coupon.description || `Apply code ${coupon.code} on checkout to redeem discount.`}
+          </p>
+        </div>
+
+        <div className="text-[10px] font-extrabold text-white/70 uppercase tracking-widest mt-4">
+          Min Order: <span className="text-white font-black">₹{coupon.minOrder || 0}</span>
+        </div>
+      </div>
+
+      {/* Dashed vertical divider with tear notches */}
+      <div className="w-[1px] border-l-2 border-dashed border-white/20 relative my-1">
+        <div className="absolute -top-3.5 -left-1 w-2 h-2 rounded-full bg-slate-50" />
+        <div className="absolute -bottom-3.5 -left-1 w-2 h-2 rounded-full bg-slate-50" />
+      </div>
+
+      {/* Right side of Ticket */}
+      <div className="pl-6 w-28 flex flex-col justify-center items-center text-center flex-shrink-0">
+        <span className="text-[9px] font-extrabold text-white/70 uppercase tracking-wider mb-2">PROMO CODE</span>
+        <div className="w-full py-2 bg-white/15 border-2 border-dashed border-white/20 rounded-xl font-mono font-black text-xs text-white tracking-wide select-all uppercase">
+          {coupon.code}
+        </div>
+        <button
+          onClick={handleCopy}
+          className={`w-full py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase mt-2.5 transition-all duration-200 ${
+            copied 
+              ? 'bg-emerald-500 text-white shadow-sm' 
+              : 'bg-white text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const SpecialOffers = () => {
+  const { url } = useContext(StoreContext);
+  const [offers, setOffers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fallbackOffers = [
+    {
+      _id: "mock1",
+      code: "WELCOME20",
+      discountType: "percent",
+      discount: 20,
+      minOrder: 199,
+      description: "Get free delivery plus 20% discount on orders above ₹199."
+    },
+    {
+      _id: "mock2",
+      code: "FEASTWEEK",
+      discountType: "fixed",
+      discount: 50,
+      minOrder: 399,
+      description: "Get ₹50 off on midweek orders. Enjoy double reward points."
+    }
+  ];
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const res = await axios.get(`${url}/api/coupons/public`);
+        if (res.data.success && res.data.data && res.data.data.length > 0) {
+          setOffers(res.data.data);
+        } else {
+          setOffers(fallbackOffers);
+        }
+      } catch (err) {
+        console.error("Error fetching public offers:", err);
+        setOffers(fallbackOffers);
+      }
+      setLoading(false);
+    };
+    fetchOffers();
+  }, [url]);
+
+  return (
+    <section className="py-20 bg-slate-50 border-y border-slate-100">
       <Container>
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-14">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-xl mb-3">
               <span className="text-2xs font-bold text-emerald-700 uppercase tracking-widest">Promotions</span>
             </div>
-            <h2 className="font-poppins text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="font-poppins text-2xl font-extrabold text-slate-900 tracking-tight">
               Exclusive <span className="text-gradient-emerald">offers</span> for you
             </h2>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {offers.map((offer, idx) => (
-            <motion.div
-              key={idx}
-              whileHover={{ y: -6 }}
-              className={`rounded-3xl p-8 bg-gradient-to-br ${offer.gradient} text-white shadow-lg relative overflow-hidden flex flex-col justify-between h-56 transition-all duration-300`}
-            >
-              {/* Backing patterns */}
-              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-              <div className="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-white/10 blur-xl pointer-events-none" />
-
-              <div className="relative z-10 flex justify-between items-start">
-                <span className="px-3.5 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-wider">
-                  {offer.badge}
-                </span>
-                <div className="text-right">
-                  <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest">Code</p>
-                  <p className="font-poppins font-black text-sm text-yellow-300 tracking-wide mt-0.5">{offer.code}</p>
-                </div>
-              </div>
-
-              <div className="relative z-10">
-                <h3 className="font-poppins font-black text-xl mb-1.5 leading-none">{offer.title}</h3>
-                <p className="text-white/80 text-xs font-semibold leading-relaxed max-w-sm mb-4">{offer.desc}</p>
-                <button
-                  onClick={() => navigate('/menu')}
-                  className="px-4 py-2 bg-white text-slate-900 hover:bg-slate-50 font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1"
-                >
-                  Order Now <FiChevronRight size={13} strokeWidth={2.5} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+            <div className="h-32 bg-slate-100 rounded-3xl w-full"></div>
+            <div className="h-32 bg-slate-100 rounded-3xl w-full"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {offers.map(coupon => (
+              <CouponTicketCard key={coupon._id} coupon={coupon} />
+            ))}
+          </div>
+        )}
       </Container>
     </section>
   );

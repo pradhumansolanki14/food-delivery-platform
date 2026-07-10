@@ -176,4 +176,19 @@ const getActiveCoupons = async (req, res) => {
   }
 };
 
-export { validateCoupon, listCoupons, createCoupon, toggleCoupon, deleteCoupon, updateCoupon, getActiveCoupons };
+// ─── Public: list active platform coupons ──────────────────────
+const getPublicCoupons = async (req, res) => {
+  try {
+    const coupons = await couponModel.find({
+      isActive: true,
+      restaurantId: null,
+      expiresAt: { $gt: new Date() }
+    }).sort({ discount: -1 });
+    res.json({ success: true, data: coupons });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: "Error fetching public coupons" });
+  }
+};
+
+export { validateCoupon, listCoupons, createCoupon, toggleCoupon, deleteCoupon, updateCoupon, getActiveCoupons, getPublicCoupons };

@@ -13,6 +13,7 @@ import {
 import { MdOutlineLocalParking, MdOutlineFoodBank, MdOutlineTableRestaurant } from "react-icons/md";
 import { StoreContext } from "../../context/StoreContext";
 import ReviewsWidget from "../../components/Reviews/ReviewsWidget";
+import { FoodTypeIcon } from "../../components/ui";
 
 const axiosInstance = axios;
 
@@ -66,7 +67,8 @@ const FoodCard = ({ item, url, cartItems, addToCart, removeFromCart, formatPrice
   const discounted = item.discount > 0 ? item.price * (1 - item.discount / 100) : item.price;
   const unavailable = !item.isAvailable || isClosed;
   return (
-    <div className={`bg-white rounded-2xl border flex gap-0 overflow-hidden transition-all hover:shadow-md ${unavailable ? "opacity-55" : "border-slate-100 hover:border-emerald-100"}`}>
+    <div className={`relative bg-white rounded-2xl border flex gap-0 overflow-hidden transition-all hover:shadow-md ${unavailable ? "opacity-55" : "border-slate-100 hover:border-emerald-100"}`}>
+      <FoodTypeIcon isVeg={item.isVeg} className="absolute top-3.5 right-3.5 z-10 shadow-xs" />
       <div className="relative flex-shrink-0 w-32 sm:w-36 self-stretch bg-slate-100 min-h-[110px]">
         {item.image ? (
           <img src={`${url}/images/${item.image}`} alt={item.name} className="w-full h-full object-cover absolute inset-0" />
@@ -78,11 +80,6 @@ const FoodCard = ({ item, url, cartItems, addToCart, removeFromCart, formatPrice
         {item.discount > 0 && (
           <span className="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full z-10">
             -{item.discount}%
-          </span>
-        )}
-        {item.isVeg && (
-          <span className="absolute top-2 right-2 w-4 h-4 rounded border-2 border-green-600 bg-white flex items-center justify-center z-10">
-            <span className="w-2 h-2 rounded-full bg-green-600" />
           </span>
         )}
       </div>
@@ -317,12 +314,67 @@ const SectionNav = ({ activeSection, setActiveSection }) => {
   );
 };
 
+const RestaurantOfferCard = ({ coupon }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(coupon.code);
+    setCopied(true);
+    toast.success(`Coupon code ${coupon.code} copied!`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const isPercent = coupon.discountType === "percent";
+
+  return (
+    <div className="flex-shrink-0 w-64 bg-gradient-to-br from-emerald-600 to-teal-500 text-white rounded-2xl p-4 shadow-sm relative overflow-hidden transition-all duration-300 flex flex-col justify-between group">
+      {/* Semi-circle notches on side borders for ticket look (matches white wrapper) */}
+      <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white" />
+      <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white" />
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-black uppercase text-white bg-white/20 px-2 py-0.5 rounded-md">
+            {isPercent ? `${coupon.discount}% Off` : `₹${coupon.discount} Off`}
+          </span>
+          <span className="text-[9px] font-bold text-white/70 tracking-widest uppercase">
+            Store Exclusive
+          </span>
+        </div>
+        <h4 className="font-poppins font-black text-white text-sm tracking-tight leading-snug truncate">
+          Use code {coupon.code}
+        </h4>
+        <p className="text-[11px] text-white/80 font-semibold mt-1 line-clamp-2 leading-relaxed">
+          {coupon.description || `Get ${coupon.discount}${isPercent ? '%' : ' Rs'} off on your order.`}
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-dashed border-white/20">
+        <span className="text-[9px] font-bold text-white/75 uppercase">
+          Min order: <span className="text-white font-black">₹{coupon.minOrder || 0}</span>
+        </span>
+        <button
+          onClick={handleCopy}
+          className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${
+            copied
+              ? "bg-white text-emerald-600 shadow-2xs"
+              : "bg-white text-slate-900 hover:bg-slate-100"
+          }`}
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const RestaurantDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { url, cartItems, addToCart, removeFromCart, formatPrice, token, toggleFavorite, isFavorite } = useContext(StoreContext);
 
   const [restaurant, setRestaurant]         = useState(null);
+  const [coupons, setCoupons]               = useState([]);
   const [menu, setMenu]                     = useState([]);
   const [loading, setLoading]               = useState(true);
   const [isVeg, setIsVeg]                   = useState(false);
@@ -368,6 +420,20 @@ const RestaurantDetail = () => {
       const r = rRes.data.data.restaurant;
       setRestaurant(r);
       setActualId(r._id);
+
+      try {
+        const cRes = await axiosInstance.get(`${url}/api/coupons/active?restaurantId=${r._id}`);
+        if (cRes.data.success) {
+          const restaurantOnly = (cRes.data.data || []).filter(c => {
+            const cRestId = c.restaurantId && typeof c.restaurantId === 'object' ? c.restaurantId._id : c.restaurantId;
+            return cRestId && cRestId.toString() === r._id.toString();
+          });
+          setCoupons(restaurantOnly);
+        }
+      } catch (err) {
+        console.error("Error fetching restaurant storefront offers:", err);
+      }
+
       const mRes = await axiosInstance.get(url + "/api/food/list?restaurantId=" + r._id);
       if (mRes.data.success) setMenu(mRes.data.data);
       const relRes = await axiosInstance.get(url + "/api/food/restaurants");
@@ -541,6 +607,23 @@ const RestaurantDetail = () => {
         {activeSection === "menu" && (
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }} className="space-y-6">
+            
+            {/* Dynamic Offers Section */}
+            {coupons.length > 0 && (
+              <div className="animate-fadeUp bg-white rounded-3xl border border-slate-100 p-5 shadow-xs">
+                <div className="flex items-center gap-2 mb-4">
+                  <FiTag className="text-emerald-500" />
+                  <h3 className="font-poppins font-extrabold text-xs uppercase tracking-widest text-slate-450">
+                    Deals & Offers For You
+                  </h3>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                  {coupons.map(coupon => (
+                    <RestaurantOfferCard key={coupon._id} coupon={coupon} />
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-bold text-slate-800 tracking-tight">Menu Highlights</h2>

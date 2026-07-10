@@ -320,25 +320,45 @@ const Add = ({ url }) => {
             </div>
           </div>
 
-          {/* Toggle Switches */}
           <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-xl border border-zinc-200">
             <div>
-              <p className="text-xs font-bold text-zinc-800">Vegetarian Compliant</p>
-              <p className="text-[10px] text-zinc-450 mt-0.5 font-semibold">Flag this item as safe for vegetarians</p>
+              <p className="text-xs font-bold text-zinc-800">Food Type</p>
+              <p className="text-[10px] text-zinc-450 mt-0.5 font-semibold">Mark this food item as Veg or Non Veg</p>
             </div>
             
-            <button
-              type="button"
-              onClick={() => setData(d => ({ ...d, isVeg: !d.isVeg }))}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-bold text-[10px] uppercase tracking-wider transition-colors ${
-                data.isVeg 
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                  : 'bg-white border-zinc-250 text-zinc-500'
-              }`}
-            >
-              {data.isVeg && <FiCheck size={11} />}
-              <span>{data.isVeg ? 'Vegetarian' : 'Standard'}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setData(d => ({ ...d, isVeg: true }))}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-bold text-[10px] uppercase tracking-wider transition-all ${
+                  data.isVeg 
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700 shadow-2xs' 
+                    : 'bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300'
+                }`}
+              >
+                <span className="inline-flex items-center justify-center w-2.5 h-2.5 border border-emerald-600 rounded bg-white">
+                  <span className="w-1 h-1 rounded-full bg-emerald-600" />
+                </span>
+                <span>Veg</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setData(d => ({ ...d, isVeg: false }))}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-bold text-[10px] uppercase tracking-wider transition-all ${
+                  !data.isVeg 
+                    ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-2xs' 
+                    : 'bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300'
+                }`}
+              >
+                <span className="inline-flex items-center justify-center w-2.5 h-2.5 border border-rose-600 rounded bg-white">
+                  <svg className="w-1.5 h-1.5 text-rose-600 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 3l10 17H2L12 3z" />
+                  </svg>
+                </span>
+                <span>Non Veg</span>
+              </button>
+            </div>
           </div>
         </div>
 
