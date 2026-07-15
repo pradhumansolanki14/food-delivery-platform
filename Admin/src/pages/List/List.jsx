@@ -547,7 +547,7 @@ const List = ({ url }) => {
               >
                 {/* Photo */}
                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-50 border border-zinc-200 flex-shrink-0">
-                  <img src={`${url}/images/${item.image}`} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
 
                 {/* Name */}

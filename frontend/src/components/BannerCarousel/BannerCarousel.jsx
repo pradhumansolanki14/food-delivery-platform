@@ -82,7 +82,7 @@ const BannerCarousel = () => {
       <div className="relative w-full" style={{ paddingBottom: 'clamp(220px, 32vw, 420px)' }}>
         {banners.map((banner, i) => {
           const isActive = i === current;
-          const imgSrc = `${url}/images/${banner.image}`;
+          const imgSrc = banner.image;
           const hasImgError = imgErrors[banner._id];
 
           return (

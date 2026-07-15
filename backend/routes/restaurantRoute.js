@@ -8,15 +8,9 @@ import {
 } from "../controllers/restaurantController.js";
 import adminAuthMiddleware, { superAdminOnly } from "../middlewares/adminAuth.js";
 import vendorOnly from "../middlewares/vendorOnly.js";
-import multer from "multer";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const restaurantRouter = express.Router();
-
-const storage = multer.diskStorage({
-  destination: "uploads",
-  filename: (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`)
-});
-const upload = multer({ storage });
 
 // ─── Vendor only (Restaurant Manager) ────────────────────────
 restaurantRouter.get("/profile",          adminAuthMiddleware, vendorOnly, getRestaurantProfile);

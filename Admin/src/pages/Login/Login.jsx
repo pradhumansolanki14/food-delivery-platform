@@ -1,10 +1,15 @@
 import React, { useState } from "react"
 import { FiMail, FiLock, FiArrowRight, FiLoader, FiAlertCircle, FiEye, FiEyeOff } from "react-icons/fi"
 import axios from "axios"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useAdmin } from "../../context/AdminContext"
 import { BrandLogo } from "../../components/ui"
 
 const Login = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const isPartner = location.pathname === '/partner/login'
+
   const { adminLogin, url } = useAdmin()
   const [data, setData] = useState({ email: "", password: "" })
   const [loading, setLoading] = useState(false)
@@ -19,6 +24,7 @@ const Login = () => {
       const res = await axios.post(`${url}/api/admin/login`, data)
       if (res.data.success) {
         adminLogin(res.data.token, res.data.name, res.data.role, res.data.restaurantId)
+        navigate("/dashboard", { replace: true })
       } else {
         setError(res.data.message)
       }
@@ -47,18 +53,24 @@ const Login = () => {
             <BrandLogo size={14} />
           </div>
           <div>
-            <span className="text-sm font-mono font-bold uppercase tracking-widest text-white">CraveArc</span>
-            <span className="ml-2 text-[9px] font-mono px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30">CON</span>
+            <span className="text-sm font-mono font-bold uppercase tracking-widest text-white">
+              {isPartner ? "CraveArc Partner Portal" : "CraveArc Platform Administration"}
+            </span>
+            <span className="ml-2 text-[9px] font-mono px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30">
+              {isPartner ? "PARTNER" : "ADMIN"}
+            </span>
           </div>
         </div>
 
         {/* Dynamic marketing text block */}
         <div className="relative z-10 max-w-sm">
           <h2 className="text-3xl font-bold tracking-tight text-white leading-tight font-display">
-            The culinary operations engine.
+            {isPartner ? "Grow your restaurant business." : "The platform administration control center."}
           </h2>
           <p className="text-zinc-400 text-xs font-medium leading-relaxed mt-4">
-            Manage menus, track incoming orders, and audit platform settings with extreme speed. Designed for 2026 operations.
+            {isPartner
+              ? "Manage menus, track incoming orders, and review customer feedback with extreme speed. Designed for 2026 operations."
+              : "Audit platform settings, manage vendors, control categories, and analyze global platform activity in real-time."}
           </p>
         </div>
 
@@ -75,8 +87,12 @@ const Login = () => {
           
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-xl font-bold tracking-tight text-zinc-900">Sign in to Console</h1>
-            <p className="text-xs text-zinc-400 font-semibold mt-1">Provide your staff credentials to continue</p>
+            <h1 className="text-xl font-bold tracking-tight text-zinc-900">
+              {isPartner ? "Partner Login" : "Platform Admin Login"}
+            </h1>
+            <p className="text-xs text-zinc-400 font-semibold mt-1">
+              {isPartner ? "Access your Restaurant Dashboard." : "Manage the CraveArc Platform."}
+            </p>
           </div>
 
           {error && (
@@ -96,7 +112,7 @@ const Login = () => {
                   type="email"
                   value={data.email}
                   onChange={(e) => setData((d) => ({ ...d, email: e.target.value }))}
-                  placeholder="name@restaurant.com"
+                  placeholder={isPartner ? "partner@restaurant.com" : "admin@cravearc.com"}
                   required
                   className="bg-transparent border-none outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full"
                 />

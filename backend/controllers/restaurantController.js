@@ -1,6 +1,6 @@
 import restaurantModel, { generateUniqueSlug } from "../models/restaurantModel.js";
 import cuisineModel from "../models/cuisineModel.js";
-import fs from "fs";
+import { uploadToCloudinary, deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 // ─── Vendor: get own restaurant profile ──────────────────────
 const getRestaurantProfile = async (req, res) => {
@@ -76,20 +76,20 @@ const updateRestaurantProfile = async (req, res) => {
 
     // Handle logo upload
     if (req.files?.logo?.[0]) {
-      const newFilename = req.files.logo[0].filename;
       if (restaurant.logo) {
-        fs.unlink(`uploads/${restaurant.logo}`, () => {});
+        await deleteFromCloudinary(restaurant.logo);
       }
-      restaurant.logo = newFilename;
+      const logoUrl = await uploadToCloudinary(req.files.logo[0].buffer, "cravearc/restaurants/logos");
+      restaurant.logo = logoUrl;
     }
 
     // Handle coverImage upload
     if (req.files?.coverImage?.[0]) {
-      const newFilename = req.files.coverImage[0].filename;
       if (restaurant.coverImage) {
-        fs.unlink(`uploads/${restaurant.coverImage}`, () => {});
+        await deleteFromCloudinary(restaurant.coverImage);
       }
-      restaurant.coverImage = newFilename;
+      const coverUrl = await uploadToCloudinary(req.files.coverImage[0].buffer, "cravearc/restaurants/covers");
+      restaurant.coverImage = coverUrl;
     }
 
     // Handle gallery deletions (remaining filenames passed in body)
@@ -104,19 +104,20 @@ const updateRestaurantProfile = async (req, res) => {
           remaining = req.body.gallery;
         }
       }
-      // Delete unselected gallery files from disk
+      // Delete unselected gallery files from Cloudinary
       if (restaurant.gallery && restaurant.gallery.length > 0) {
         const toDelete = restaurant.gallery.filter(img => !remaining.includes(img));
-        toDelete.forEach(img => {
-          fs.unlink(`uploads/${img}`, () => {});
-        });
+        for (const img of toDelete) {
+          await deleteFromCloudinary(img);
+        }
       }
       restaurant.gallery = remaining;
     }
 
     // Handle new gallery uploads (append to list)
     if (req.files?.gallery && req.files.gallery.length > 0) {
-      const newImages = req.files.gallery.map(f => f.filename);
+      const uploadPromises = req.files.gallery.map(f => uploadToCloudinary(f.buffer, "cravearc/restaurants/gallery"));
+      const newImages = await Promise.all(uploadPromises);
       restaurant.gallery = [...(restaurant.gallery || []), ...newImages];
     }
 

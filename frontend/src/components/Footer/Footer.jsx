@@ -29,22 +29,22 @@ const footerLinks = {
 const Footer = () => {
   return (
     <footer className="bg-slate-950 text-slate-400" id="footer">
-      
+
       {/* ── Main Footer Link Columns ── */}
       <div className="py-16">
         <Container>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
-            
+
             {/* Brand Information column */}
             <div className="lg:col-span-2 space-y-6">
               <Link to="/" className="flex items-center gap-2.5 group">
-                <BrandLogo size={14} className="group-hover:scale-105" />
-                <BrandText className="text-xl text-white [&>span]:text-emerald-450 [&>span:first-child]:text-white" />
+                <BrandLogo size={30} className="group-hover:scale-105" />
+                <BrandText className="text-3xl text-white [&>span]:text-emerald-450 [&>span:first-child]:text-white" />
               </Link>
               <p className="text-sm leading-relaxed text-slate-400 max-w-xs font-semibold">
                 Premium food delivery bringing the city&apos;s best dishes directly to your doorstep. Hot, fresh, and hand-delivered with care.
               </p>
-              
+
               {/* Social Link List */}
               <div className="flex items-center gap-3">
                 {[
@@ -53,9 +53,9 @@ const Footer = () => {
                   { icon: <FaInstagram size={16} />, label: "Instagram", path: "#" },
                   { icon: <FaLinkedinIn size={16} />, label: "LinkedIn", path: "#" },
                 ].map((s, i) => (
-                  <a 
-                    key={i} 
-                    href={s.path} 
+                  <a
+                    key={i}
+                    href={s.path}
                     aria-label={s.label}
                     className="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500 hover:bg-emerald-550 hover:text-white flex items-center justify-center text-slate-450 hover:scale-105 transition-all duration-200"
                   >
@@ -72,8 +72,8 @@ const Footer = () => {
                 <ul className="space-y-3.5">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <a 
-                        href={link.path} 
+                      <a
+                        href={link.path}
                         className="text-sm text-slate-400 hover:text-white transition-colors duration-200 hover:translate-x-0.5 inline-block font-semibold"
                       >
                         {link.label}

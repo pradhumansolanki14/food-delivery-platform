@@ -439,7 +439,7 @@ const CategoriesSection = () => {
                   <div className="w-full h-full rounded-full overflow-hidden bg-white">
                     {item.image ? (
                       <img
-                        src={`${url}/images/${item.image}`}
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
                       />

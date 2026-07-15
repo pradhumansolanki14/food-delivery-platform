@@ -549,7 +549,7 @@ const PlaceOrder = () => {
                 {cartFoods.map((item) => (
                   <div key={item._id} className="flex items-center gap-3">
                     <img 
-                      src={`${url}/images/${item.image}`} 
+                      src={item.image} 
                       alt={item.name} 
                       className="w-10 h-10 rounded-xl object-cover flex-shrink-0 bg-slate-50 border border-slate-100" 
                     />

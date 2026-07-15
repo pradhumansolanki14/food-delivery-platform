@@ -48,7 +48,7 @@ const RestaurantCard = ({ restaurant, url }) => {
       <div className="relative h-44 sm:h-48 overflow-hidden bg-slate-50 rounded-t-2xl">
         {restaurant.coverImage ? (
           <img
-            src={`${url}/images/${restaurant.coverImage}`}
+            src={restaurant.coverImage}
             alt={restaurant.name}
             className={`w-full h-full object-cover transition-transform duration-500 ease-out ${
               !isClosed ? 'group-hover:scale-105' : ''
@@ -100,7 +100,7 @@ const RestaurantCard = ({ restaurant, url }) => {
       {/* Logo badge overlay (placed outside overflow-hidden cover container to prevent clipping) */}
       {restaurant.logo && (
         <div className="absolute top-[148px] sm:top-[164px] left-5 w-14 h-14 rounded-2xl bg-white border-2 border-white shadow-md overflow-hidden z-20 transition-transform duration-300 group-hover:scale-105">
-          <img src={`${url}/images/${restaurant.logo}`} alt="Logo" className="w-full h-full object-cover" />
+          <img src={restaurant.logo} alt="Logo" className="w-full h-full object-cover" />
         </div>
       )}
 

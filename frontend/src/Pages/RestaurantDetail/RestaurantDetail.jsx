@@ -71,7 +71,7 @@ const FoodCard = ({ item, url, cartItems, addToCart, removeFromCart, formatPrice
       <FoodTypeIcon isVeg={item.isVeg} className="absolute top-3.5 right-3.5 z-10 shadow-xs" />
       <div className="relative flex-shrink-0 w-32 sm:w-36 self-stretch bg-slate-100 min-h-[110px]">
         {item.image ? (
-          <img src={`${url}/images/${item.image}`} alt={item.name} className="w-full h-full object-cover absolute inset-0" />
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover absolute inset-0" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-200">
             <FiTag size={28} />
@@ -520,7 +520,7 @@ const RestaurantDetail = () => {
         {/* Background Cover Image */}
         {restaurant.coverImage ? (
           <img
-            src={url + "/images/" + restaurant.coverImage}
+            src={restaurant.coverImage}
             alt={restaurant.name}
             className="absolute inset-0 w-full h-full object-cover opacity-60"
           />
@@ -547,7 +547,7 @@ const RestaurantDetail = () => {
               <div className="flex-shrink-0">
                 {restaurant.logo ? (
                   <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white border-2 border-white/90 shadow-lg overflow-hidden">
-                    <img src={url + "/images/" + restaurant.logo} alt="Logo" className="w-full h-full object-cover" />
+                    <img src={restaurant.logo} alt="Logo" className="w-full h-full object-cover" />
                   </div>
                 ) : (
                   <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-emerald-450 to-teal-500 border-2 border-white/90 shadow-lg flex items-center justify-center">
@@ -749,7 +749,7 @@ const RestaurantDetail = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {restaurant.gallery.map((img, idx) => (
                     <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-100 shadow-xs">
-                      <img src={url + "/images/" + img} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                      <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                     </div>
                   ))}
                 </div>
@@ -849,7 +849,7 @@ const RestaurantDetail = () => {
                   className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-md hover:border-emerald-200 transition-all group">
                   <div className="h-32 bg-slate-100 relative overflow-hidden">
                     {r.coverImage ? (
-                      <img src={url + "/images/" + r.coverImage} alt={r.name}
+                      <img src={r.coverImage} alt={r.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-teal-100 flex items-center justify-center">

@@ -2,7 +2,7 @@ import foodModel from "../models/foodModel.js";
 import restaurantModel from "../models/restaurantModel.js";
 import foodReviewModel from "../models/foodReviewModel.js";
 import cuisineModel from "../models/cuisineModel.js";
-import fs from "fs";
+import { uploadToCloudinary, deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 // ─── Add food (vendor adds to their restaurant) ──────────────
 const addFood = async (req, res) => {
@@ -11,8 +11,7 @@ const addFood = async (req, res) => {
     const restaurantId = req.restaurantId;
     if (!restaurantId) return res.json({ success: false, message: "No restaurant linked to this account" });
 
-    const image_filename = req.file ? req.file.filename : null;
-    if (!image_filename) return res.json({ success: false, message: "Image required" });
+    if (!req.file) return res.json({ success: false, message: "Image required" });
 
     let tagsArray = [];
     if (req.body.tags) {
@@ -27,12 +26,14 @@ const addFood = async (req, res) => {
       }
     }
 
+    const imageUrl = await uploadToCloudinary(req.file.buffer, "cravearc/foods");
+
     const food = new foodModel({
       name: req.body.name,
       description: req.body.description,
       price: Number(req.body.price),
       category: req.body.category,
-      image: image_filename,
+      image: imageUrl,
       restaurantId,
       preparationTime: req.body.preparationTime ? Number(req.body.preparationTime) : undefined,
       isVeg: req.body.isVeg === "true" || req.body.isVeg === true,
@@ -149,6 +150,14 @@ const updateFood = async (req, res) => {
       }
     }
 
+    let imageUrl = undefined;
+    if (req.file) {
+      if (food.image) {
+        await deleteFromCloudinary(food.image);
+      }
+      imageUrl = await uploadToCloudinary(req.file.buffer, "cravearc/foods");
+    }
+
     const updates = {
       name: req.body.name || food.name,
       description: req.body.description || food.description,
@@ -162,8 +171,7 @@ const updateFood = async (req, res) => {
     };
 
     if (req.file) {
-      if (food.image) fs.unlink(`uploads/${food.image}`, () => {});
-      updates.image = req.file.filename;
+      updates.image = imageUrl;
     }
 
     const updated = await foodModel.findByIdAndUpdate(req.params.id, updates, { new: true });
@@ -205,7 +213,9 @@ const removeFood = async (req, res) => {
       return res.json({ success: false, message: "Not authorized" });
     }
 
-    if (food.image) fs.unlink(`uploads/${food.image}`, () => {});
+    if (food.image) {
+      await deleteFromCloudinary(food.image);
+    }
     await foodModel.findByIdAndDelete(req.body.id);
     res.json({ success: true, message: "Food Removed" });
   } catch (error) {

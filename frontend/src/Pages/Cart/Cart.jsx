@@ -120,7 +120,7 @@ const Cart = () => {
                           <div className="flex items-center gap-3">
                             {group.logo ? (
                               <img 
-                                src={`${url}/images/${group.logo}`} 
+                                src={group.logo} 
                                 alt="logo" 
                                 className="w-10 h-10 rounded-xl object-cover border border-slate-100 shadow-xs flex-shrink-0" 
                               />
@@ -150,7 +150,7 @@ const Cart = () => {
                             <div key={item._id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0 group">
                               {/* Item Image */}
                               <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-50 border border-slate-100">
-                                <img src={`${url}/images/${item.image}`} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               </div>
 
                               {/* Item details */}

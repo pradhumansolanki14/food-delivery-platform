@@ -1,15 +1,9 @@
 import express from "express";
 import { createBanner, updateBanner, deleteBanner, listBanners } from "../controllers/bannerController.js";
 import adminAuthMiddleware, { superAdminOnly } from "../middlewares/adminAuth.js";
-import multer from "multer";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const bannerRouter = express.Router();
-
-const storage = multer.diskStorage({
-  destination: "uploads",
-  filename: (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`)
-});
-const upload = multer({ storage });
 
 // ─── Public ───────────────────────────────────────────────────
 bannerRouter.get("/",                          listBanners);

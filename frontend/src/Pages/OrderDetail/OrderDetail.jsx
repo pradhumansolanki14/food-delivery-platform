@@ -181,7 +181,7 @@ const OrderDetail = () => {
                     <div key={i} className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
                         {foodData ? (
-                          <img src={`${url}/images/${foodData.image}`} alt={item.name} className="w-full h-full object-cover" />
+                          <img src={foodData.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-400 text-lg">🍽️</div>
                         )}
@@ -250,7 +250,7 @@ const OrderDetail = () => {
                 <div className="h-20 bg-slate-100 relative">
                   {restaurant.coverImage && (
                     <img 
-                      src={`${url}/images/${restaurant.coverImage}`} 
+                      src={restaurant.coverImage} 
                       alt={restaurant.name} 
                       className="w-full h-full object-cover" 
                     />
@@ -259,7 +259,7 @@ const OrderDetail = () => {
                 </div>
                 <div className="p-5 flex gap-3 relative mt-[-24px] z-10">
                   <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-md overflow-hidden flex-shrink-0">
-                    <img src={`${url}/images/${restaurant.logo}`} alt="Logo" className="w-full h-full object-cover" />
+                    <img src={restaurant.logo} alt="Logo" className="w-full h-full object-cover" />
                   </div>
                   <div className="pt-6 min-w-0">
                     <h3 className="font-poppins font-bold text-slate-900 text-sm truncate">{restaurant.name}</h3>

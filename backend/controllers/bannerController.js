@@ -1,5 +1,5 @@
 import bannerModel from "../models/bannerModel.js";
-import fs from "fs";
+import { uploadToCloudinary, deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 // ─── Create banner (super admin only) ────────────────────────
 const createBanner = async (req, res) => {
@@ -7,24 +7,23 @@ const createBanner = async (req, res) => {
     const { title, subtitle, restaurantId, order } = req.body;
     if (!title) return res.json({ success: false, message: "Title required" });
 
+    if (!req.file) return res.json({ success: false, message: "Image required" });
+
     // MIME type check
-    if (req.file) {
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-      if (!allowedTypes.includes(req.file.mimetype)) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Only JPEG, PNG, and WebP images are allowed" 
-        });
-      }
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Only JPEG, PNG, and WebP images are allowed" 
+      });
     }
 
-    const image_filename = req.file ? req.file.filename : null;
-    if (!image_filename) return res.json({ success: false, message: "Image required" });
+    const imageUrl = await uploadToCloudinary(req.file.buffer, "cravearc/banners");
 
     const banner = await bannerModel.create({
       title,
       subtitle: subtitle || "",
-      image: image_filename,
+      image: imageUrl,
       restaurantId: restaurantId || null,
       order: order ? Number(order) : 0,
       isActive: true,
@@ -43,6 +42,7 @@ const updateBanner = async (req, res) => {
     const banner = await bannerModel.findById(req.params.id);
     if (!banner) return res.json({ success: false, message: "Banner not found" });
 
+    let imageUrl = undefined;
     // MIME type check for new image
     if (req.file) {
       const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -55,8 +55,9 @@ const updateBanner = async (req, res) => {
 
       // Delete old image file
       if (banner.image) {
-        fs.unlink(`uploads/${banner.image}`, () => {});
+        await deleteFromCloudinary(banner.image);
       }
+      imageUrl = await uploadToCloudinary(req.file.buffer, "cravearc/banners");
     }
 
     const { title, subtitle, restaurantId, order, isActive } = req.body;
@@ -67,7 +68,7 @@ const updateBanner = async (req, res) => {
     if (restaurantId !== undefined) updates.restaurantId = restaurantId || null;
     if (order !== undefined) updates.order = Number(order);
     if (isActive !== undefined) updates.isActive = isActive;
-    if (req.file) updates.image = req.file.filename;
+    if (req.file) updates.image = imageUrl;
 
     const updated = await bannerModel.findByIdAndUpdate(req.params.id, updates, { new: true });
     res.json({ success: true, message: "Banner updated", data: updated });
@@ -85,7 +86,7 @@ const deleteBanner = async (req, res) => {
 
     // Delete image file
     if (banner.image) {
-      fs.unlink(`uploads/${banner.image}`, () => {});
+      await deleteFromCloudinary(banner.image);
     }
 
     await bannerModel.findByIdAndDelete(req.params.id);

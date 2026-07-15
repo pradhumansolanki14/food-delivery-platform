@@ -1,15 +1,7 @@
 import express from "express";
 import { createCuisine, updateCuisine, deleteCuisine, listCuisines } from "../controllers/cuisineController.js";
 import adminAuthMiddleware, { superAdminOnly } from "../middlewares/adminAuth.js";
-import multer from "multer";
-
-const storage = multer.diskStorage({
-  destination: "uploads",
-  filename: (req, file, callback) => {
-    callback(null, `${Date.now()}_${file.originalname}`);
-  }
-});
-const upload = multer({ storage });
+import upload from "../middlewares/uploadMiddleware.js";
 
 const cuisineRouter = express.Router();
 

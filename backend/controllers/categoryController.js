@@ -1,6 +1,6 @@
 import categoryModel from "../models/categoryModel.js";
 import foodModel from "../models/foodModel.js";
-import fs from "fs";
+import { uploadToCloudinary, deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -10,24 +10,25 @@ const createCategory = async (req, res) => {
     const { name, description, featured } = req.body;
     if (!name) return res.json({ success: false, message: "Name required" });
 
-    // MIME type check
-    if (req.file && !ALLOWED_TYPES.includes(req.file.mimetype)) {
-      fs.unlink(`uploads/${req.file.filename}`, () => {});
-      return res.status(400).json({ success: false, message: "Only JPEG, PNG, and WebP images are allowed" });
-    }
-
-    // Check for duplicate name
+    // Check for duplicate name first
     const exists = await categoryModel.findOne({ name });
     if (exists) {
-      if (req.file) fs.unlink(`uploads/${req.file.filename}`, () => {});
       return res.json({ success: false, message: "Category name already exists" });
     }
 
-    const image_filename = req.file ? req.file.filename : "";
+    // MIME type check
+    if (req.file && !ALLOWED_TYPES.includes(req.file.mimetype)) {
+      return res.status(400).json({ success: false, message: "Only JPEG, PNG, and WebP images are allowed" });
+    }
+
+    let imageUrl = "";
+    if (req.file) {
+      imageUrl = await uploadToCloudinary(req.file.buffer, "cravearc/categories");
+    }
 
     const category = await categoryModel.create({
       name,
-      image: image_filename,
+      image: imageUrl,
       description: description || "",
       isActive: true,
       featured: featured === 'true' || featured === true ? true : false,
@@ -36,7 +37,6 @@ const createCategory = async (req, res) => {
     res.json({ success: true, message: "Category created", data: category });
   } catch (error) {
     console.log(error);
-    if (req.file) fs.unlink(`uploads/${req.file.filename}`, () => {});
     res.json({ success: false, message: "Error creating category" });
   }
 };
@@ -47,18 +47,6 @@ const updateCategory = async (req, res) => {
     const category = await categoryModel.findById(req.params.id);
     if (!category) return res.json({ success: false, message: "Category not found" });
 
-    // MIME type check for new image
-    if (req.file) {
-      if (!ALLOWED_TYPES.includes(req.file.mimetype)) {
-        fs.unlink(`uploads/${req.file.filename}`, () => {});
-        return res.status(400).json({ success: false, message: "Only JPEG, PNG, and WebP images are allowed" });
-      }
-      // Delete old image file
-      if (category.image) {
-        fs.unlink(`uploads/${category.image}`, () => {});
-      }
-    }
-
     const { name, description, isActive, featured } = req.body;
     const oldName = category.name;
     const isRenaming = name !== undefined && name !== oldName;
@@ -66,9 +54,21 @@ const updateCategory = async (req, res) => {
     if (isRenaming) {
       const exists = await categoryModel.findOne({ name });
       if (exists) {
-        if (req.file) fs.unlink(`uploads/${req.file.filename}`, () => {});
         return res.json({ success: false, message: "Category name already exists" });
       }
+    }
+
+    let imageUrl = undefined;
+    // MIME type check for new image
+    if (req.file) {
+      if (!ALLOWED_TYPES.includes(req.file.mimetype)) {
+        return res.status(400).json({ success: false, message: "Only JPEG, PNG, and WebP images are allowed" });
+      }
+      // Delete old image file
+      if (category.image) {
+        await deleteFromCloudinary(category.image);
+      }
+      imageUrl = await uploadToCloudinary(req.file.buffer, "cravearc/categories");
     }
 
     const updates = {};
@@ -76,7 +76,7 @@ const updateCategory = async (req, res) => {
     if (description !== undefined) updates.description = description;
     if (isActive !== undefined)    updates.isActive    = isActive;
     if (featured !== undefined)    updates.featured    = featured === 'true' || featured === true ? true : false;
-    if (req.file)                  updates.image       = req.file.filename;
+    if (req.file)                  updates.image       = imageUrl;
 
     const updated = await categoryModel.findByIdAndUpdate(req.params.id, updates, { new: true });
     
@@ -88,7 +88,6 @@ const updateCategory = async (req, res) => {
     res.json({ success: true, message: "Category updated", data: updated });
   } catch (error) {
     console.log(error);
-    if (req.file) fs.unlink(`uploads/${req.file.filename}`, () => {});
     res.json({ success: false, message: "Error updating category" });
   }
 };
@@ -108,9 +107,9 @@ const deleteCategory = async (req, res) => {
       });
     }
 
-    // Delete image file from disk
+    // Delete image file from Cloudinary
     if (category.image) {
-      fs.unlink(`uploads/${category.image}`, () => {});
+      await deleteFromCloudinary(category.image);
     }
 
     await categoryModel.findByIdAndDelete(req.params.id);

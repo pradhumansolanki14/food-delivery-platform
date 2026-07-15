@@ -49,8 +49,8 @@ const RestaurantProfile = ({ url }) => {
           selectedTags: d.tags || [],
           gallery: d.gallery || [],
         });
-        setLogoPreview(d.logo ? `${url}/images/${d.logo}` : "");
-        setCoverPreview(d.coverImage ? `${url}/images/${d.coverImage}` : "");
+        setLogoPreview(d.logo ? d.logo : "");
+        setCoverPreview(d.coverImage ? d.coverImage : "");
       } else {
         toast.error(res.data.message);
       }
@@ -143,8 +143,8 @@ const RestaurantProfile = ({ url }) => {
           ...f,
           gallery: updatedData.gallery || []
         }));
-        if (updatedData.logo) setLogoPreview(`${url}/images/${updatedData.logo}`);
-        if (updatedData.coverImage) setCoverPreview(`${url}/images/${updatedData.coverImage}`);
+        if (updatedData.logo) setLogoPreview(updatedData.logo);
+        if (updatedData.coverImage) setCoverPreview(updatedData.coverImage);
       } else {
         toast.error(res.data.message);
       }
@@ -255,7 +255,7 @@ const RestaurantProfile = ({ url }) => {
             {/* Existing uploaded images */}
             {(form.gallery || []).map((img, idx) => (
               <div key={`exist-${idx}`} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-200 group bg-slate-50">
-                <img src={`${url}/images/${img}`} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => handleRemoveExistingGallery(idx)}

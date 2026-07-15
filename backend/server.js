@@ -17,18 +17,19 @@ import bannerRouter from "./routes/bannerRoute.js";
 import restaurantRouter from "./routes/restaurantRoute.js";
 import searchRouter from "./routes/searchRoute.js";
 import settingsModel from "./models/settingsModel.js";
-import fs from "fs";
 
 // Validate required environment variables before anything else
-const REQUIRED_ENV = ["MONGODB_URI", "JWT_SECRET", "STRIPE_SECRET_KEY", "ADMIN_SECRET_KEY"];
+const REQUIRED_ENV = [
+  "MONGODB_URI", "JWT_SECRET", "STRIPE_SECRET_KEY", "ADMIN_SECRET_KEY",
+  "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"
+];
 const missing = REQUIRED_ENV.filter(k => !process.env[k]);
 if (missing.length > 0) {
   console.error(`[FATAL] Missing required environment variables: ${missing.join(", ")}`);
   process.exit(1);
 }
 
-const uploadDir = "uploads";
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
 
 const app = express();
 const port = 4000;
@@ -70,7 +71,6 @@ const maintenanceModeMiddleware = async (req, res, next) => {
 app.use(maintenanceModeMiddleware);
 
 app.use("/api/food",     foodRouter);
-app.use("/images",       express.static("uploads"));
 app.use("/api/user",     userRouter);
 app.use("/api/cart",     cartRouter);
 app.use("/api/order",    orderRouter);

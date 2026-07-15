@@ -40,7 +40,7 @@ const SearchRestaurantRow = ({ restaurant, navigate, url }) => {
       <div className="flex items-center gap-3.5 min-w-0">
         {restaurant.logo ? (
           <img 
-            src={`${url}/images/${restaurant.logo}`} 
+            src={restaurant.logo} 
             alt={restaurant.name} 
             className="w-11 h-11 rounded-xl object-cover bg-slate-50 border border-slate-100 flex-shrink-0" 
           />
@@ -78,7 +78,7 @@ const SearchFoodRow = ({ item, url, cartItems, addToCart, removeFromCart, format
       <div className="flex items-center gap-3.5 min-w-0">
         {/* Thumbnail */}
         <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0 relative">
-          <img src={`${url}/images/${item.image}`} alt={item.name} className="w-full h-full object-cover" />
+          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
           {item.discount > 0 && (
             <span className="absolute top-0.5 left-0.5 px-1 py-0.2 bg-emerald-500 text-white text-[7px] font-black rounded-sm uppercase scale-90 origin-top-left">
               -{item.discount}%

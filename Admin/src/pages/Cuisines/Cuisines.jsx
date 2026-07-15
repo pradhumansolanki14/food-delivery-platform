@@ -52,7 +52,7 @@ const Cuisines = ({ url }) => {
     setEditing(c)
     setForm({ name: c.name })
     setImageFile(null)
-    setImagePreview(c.image ? `${url}/images/${c.image}` : "")
+    setImagePreview(c.image ? c.image : "")
     setShowForm(true)
   }
 
@@ -301,7 +301,7 @@ const Cuisines = ({ url }) => {
               <div className="h-28 bg-zinc-50 relative overflow-hidden border-b border-zinc-100 flex items-center justify-center">
                 {c.image ? (
                   <img
-                    src={`${url}/images/${c.image}`}
+                    src={c.image}
                     alt={c.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />

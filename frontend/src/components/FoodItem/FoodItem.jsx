@@ -105,7 +105,7 @@ const FoodItem = ({
 
           {/* Core Image element */}
           <img
-            src={`${url}/images/${image}`}
+            src={image}
             alt={name}
             onLoad={() => setImgLoaded(true)}
             className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${
@@ -173,7 +173,7 @@ const FoodItem = ({
             >
               {restaurantId.logo ? (
                 <img 
-                  src={`${url}/images/${restaurantId.logo}`}
+                  src={restaurantId.logo}
                   alt={restaurantId.name}
                   className="w-12 h-12 rounded-full object-cover border border-white/40 shadow-xs"
                 />
@@ -299,7 +299,7 @@ const FoodItem = ({
             <div className="w-full md:w-1/2 flex flex-col gap-4">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 shadow-2xs relative">
                 <img
-                  src={`${url}/images/${image}`}
+                  src={image}
                   alt={name}
                   className="w-full h-full object-cover"
                 />
@@ -378,7 +378,7 @@ const FoodItem = ({
                             <div className="flex items-center gap-2">
                               {altRest?.logo ? (
                                 <img 
-                                  src={`${url}/images/${altRest.logo}`}
+                                  src={altRest.logo}
                                   className="w-6 h-6 rounded-full object-cover border border-white shadow-2xs"
                                   alt={altRest.name}
                                 />

@@ -174,7 +174,7 @@ const MenuPage = () => {
                   }`}>
                     {cat.image ? (
                       <img 
-                        src={`${url}/images/${cat.image}`} 
+                        src={cat.image} 
                         alt={cat.name} 
                         className="w-full h-full rounded-full object-cover"
                         onError={(e) => { e.target.style.display = 'none'; }}

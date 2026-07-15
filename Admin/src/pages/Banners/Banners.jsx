@@ -56,7 +56,7 @@ const Banners = ({ url }) => {
       isActive: b.isActive 
     })
     setImageFile(null)
-    setImagePreview(b.image ? `${url}/images/${b.image}` : "")
+    setImagePreview(b.image ? b.image : "")
     setShowForm(true)
   }
 
@@ -289,7 +289,7 @@ const Banners = ({ url }) => {
             >
               <div className="h-32 bg-zinc-100 relative">
                 {b.image ? (
-                  <img src={`${url}/images/${b.image}`} alt={b.title} className="w-full h-full object-cover" />
+                  <img src={b.image} alt={b.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xs text-zinc-400 font-bold">No Image Banner</div>
                 )}

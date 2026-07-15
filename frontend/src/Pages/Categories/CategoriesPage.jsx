@@ -80,7 +80,7 @@ const CategoriesPage = () => {
                     <div className="w-14 h-14 rounded-xl overflow-hidden shadow-2xs border border-slate-100 flex-shrink-0 bg-slate-50">
                       {cat.image ? (
                         <img 
-                          src={`${url}/images/${cat.image}`} 
+                          src={cat.image} 
                           alt={cat.name}
                           className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
                         />

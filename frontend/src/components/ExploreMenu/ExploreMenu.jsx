@@ -86,7 +86,7 @@ const ExploreMenu = ({ category, setCategory }) => {
                   <div className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden transition-all duration-300 ${isActive ? 'ring-2 ring-white/40' : ''}`}>
                     {item.image ? (
                       <img
-                        src={`${url}/images/${item.image}`}
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />

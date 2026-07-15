@@ -219,7 +219,7 @@ const Restaurants = ({ url }) => {
                   {/* Logo */}
                   <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-150/45 flex-shrink-0 flex items-center justify-center text-slate-400 text-lg shadow-3xs">
                     {r.logo ? (
-                      <img src={`${url}/images/${r.logo}`} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={r.logo} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <span>🏪</span>
                     )}

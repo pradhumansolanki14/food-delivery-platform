@@ -134,7 +134,7 @@ const RestaurantsPage = () => {
                   }`}>
                     {c.image ? (
                       <img 
-                        src={`${url}/images/${c.image}`} 
+                        src={c.image} 
                         alt={c.name} 
                         className="w-full h-full rounded-full object-cover"
                         onError={(e) => { e.target.style.display = 'none'; }}

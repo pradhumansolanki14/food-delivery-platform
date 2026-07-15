@@ -52,7 +52,7 @@ const Categories = ({ url }) => {
     setEditing(cat)
     setForm({ name: cat.name, description: cat.description || "" })
     setImageFile(null)
-    setImagePreview(cat.image ? `${url}/images/${cat.image}` : "")
+    setImagePreview(cat.image ? cat.image : "")
     setShowForm(true)
   }
 
@@ -347,7 +347,7 @@ const Categories = ({ url }) => {
               <div className="w-full h-28 bg-zinc-50 overflow-hidden">
                 {cat.image ? (
                   <img
-                    src={`${url}/images/${cat.image}`}
+                    src={cat.image}
                     alt={cat.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />

@@ -50,7 +50,11 @@ const App = () => {
   if (!adminToken) return (
     <>
       <Toaster position="top-right" toastOptions={{ className: 'rounded-xl shadow-premium border border-slate-100 text-xs font-semibold' }} />
-      <Login />
+      <Routes>
+        <Route path='/partner/login' element={<Login />} />
+        <Route path='/admin/login' element={<Login />} />
+        <Route path='*' element={<Navigate to="/partner/login" replace />} />
+      </Routes>
     </>
   )
 

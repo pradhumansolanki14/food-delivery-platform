@@ -2,15 +2,9 @@ import express from "express";
 import { createCategory, updateCategory, deleteCategory, listCategories } from "../controllers/categoryController.js";
 import { submitRequest, getMyRequests, getAllRequests, approveRequest, rejectRequest } from "../controllers/categoryRequestController.js";
 import adminAuthMiddleware, { superAdminOnly } from "../middlewares/adminAuth.js";
-import multer from "multer";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const categoryRouter = express.Router();
-
-const storage = multer.diskStorage({
-  destination: "uploads",
-  filename: (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`)
-});
-const upload = multer({ storage });
 
 // ─── Public ───────────────────────────────────────────────────
 categoryRouter.get("/", listCategories);
