@@ -19,6 +19,8 @@ import Reviews from './pages/Reviews/Reviews'
 import PlatformReviews from './pages/PlatformReviews/PlatformReviews'
 import CategoryRequests from './pages/CategoryRequests/CategoryRequests'
 import AnnouncementsPage from './pages/Announcements/AnnouncementsPage'
+import Wallet from './pages/Wallet/Wallet'
+import Finance from './pages/Finance/Finance'
 import { Toaster } from 'react-hot-toast'
 import { useAdmin } from './context/AdminContext'
 
@@ -101,6 +103,11 @@ const App = () => {
                 <Reviews url={url} />
               </RouteGuard>
             } />
+            <Route path='/wallet' element={
+              <RouteGuard allowedRoles={['vendor']}>
+                <Wallet url={url} />
+              </RouteGuard>
+            } />
 
             {/* Platform_Admin (superadmin) only routes */}
             <Route path='/restaurants' element={
@@ -144,6 +151,11 @@ const App = () => {
             <Route path='/announcements' element={
               <RouteGuard allowedRoles={['superadmin']}>
                 <AnnouncementsPage />
+              </RouteGuard>
+            } />
+            <Route path='/finance' element={
+              <RouteGuard allowedRoles={['superadmin']}>
+                <Finance url={url} />
               </RouteGuard>
             } />
 

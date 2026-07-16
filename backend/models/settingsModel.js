@@ -14,6 +14,8 @@ const settingsSchema = new mongoose.Schema({
   maintenanceMode:    { type: Boolean, default: false },
   platformFeePercent: { type: Number, default: 0 },
   supportEmail:       { type: String, default: "" },
+  commissionPercent:  { type: Number, default: 10 },
+  gatewayFeePercent:  { type: Number, default: 2 },
 }, { timestamps: true });
 
 const settingsModel = mongoose.models.settings || mongoose.model("settings", settingsSchema);

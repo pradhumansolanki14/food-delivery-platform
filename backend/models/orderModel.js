@@ -25,6 +25,13 @@ const orderSchema = new mongoose.Schema({
   paymentPaidAt:           { type: Date, default: null },
   paymentRefundedAt:       { type: Date, default: null },
   paymentFailureReason:    { type: String, default: "" },
+
+  // Financial tracking fields (P3-R4.2)
+  commissionAmount:        { type: Number, default: 0 },
+  gatewayFee:              { type: Number, default: 0 },
+  vendorNetAmount:         { type: Number, default: 0 },
+  walletProcessed:         { type: Boolean, default: false },
+  walletProcessedAt:       { type: Date, default: null },
 }, { timestamps: true });
 
 const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);

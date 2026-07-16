@@ -1,6 +1,8 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import adminModel from "../models/adminModel.js";
+import mongoose from "mongoose";
+import * as financeService from "../services/financeService.js";
 import Stripe from "stripe";
 import couponModel from "../models/couponModel.js";
 import settingsModel from "../models/settingsModel.js";
@@ -216,12 +218,29 @@ const listOrders = async (req, res) => {
 
 // ─── Update Status (Admin) ────────────────────────────────────
 const updateStatus = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { orderId, status } = req.body;
-    const order = await orderModel.findByIdAndUpdate(orderId, { status }, { new: true });
-    if (!order) return res.json({ success: false, message: "Order not found" });
+    const order = await orderModel.findById(orderId).session(session);
+    if (!order) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.json({ success: false, message: "Order not found" });
+    }
 
-    // Fetch user and restaurant details
+    const oldStatus = order.status;
+    order.status = status;
+    await order.save({ session });
+
+    if (status === "Delivered" && oldStatus !== "Delivered") {
+      await financeService.movePendingToAvailable(orderId, session);
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Fetch user and restaurant details for notification side-effects (non-blocking)
     const user = await userModel.findById(order.userId);
     const restaurant = await restaurantModel.findById(order.restaurantId);
 

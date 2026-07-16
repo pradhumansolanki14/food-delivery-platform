@@ -4,6 +4,8 @@ import restaurantModel from "../models/restaurantModel.js";
 import * as paymentService from "../services/paymentService.js";
 import { createNotification } from "../helpers/notificationHelper.js";
 import { sendOrderConfirmationEmail } from "../services/emailService.js";
+import mongoose from "mongoose";
+import * as financeService from "../services/financeService.js";
 
 // POST /api/payments/create-order
 export const createPaymentOrder = async (req, res) => {
@@ -67,13 +69,26 @@ export const verifyPaymentSignature = async (req, res) => {
       return res.json({ success: true, message: "Payment already captured" });
     }
 
-    // Capture payment in DB
-    order.payment = true;
-    order.paymentStatus = "captured";
-    order.paymentPaidAt = new Date();
-    order.paymentGatewayPaymentId = razorpay_payment_id;
-    order.paymentGatewaySignature = razorpay_signature;
-    await order.save();
+    // Capture payment in DB inside transaction session
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      order.payment = true;
+      order.paymentStatus = "captured";
+      order.paymentPaidAt = new Date();
+      order.paymentGatewayPaymentId = razorpay_payment_id;
+      order.paymentGatewaySignature = razorpay_signature;
+      await order.save({ session });
+
+      await financeService.processOrderFinance(order._id, session);
+
+      await session.commitTransaction();
+    } catch (err) {
+      await session.abortTransaction();
+      throw err;
+    } finally {
+      session.endSession();
+    }
 
     // Trigger Notifications & Emails
     const user = await userModel.findById(order.userId);
@@ -200,11 +215,24 @@ export const handleWebhook = async (req, res) => {
       const order = await orderModel.findOne({ paymentGatewayOrderId: paymentEntity.order_id });
       
       if (order && !order.payment) {
-        order.payment = true;
-        order.paymentStatus = "captured";
-        order.paymentPaidAt = new Date();
-        order.paymentGatewayPaymentId = paymentEntity.id;
-        await order.save();
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+          order.payment = true;
+          order.paymentStatus = "captured";
+          order.paymentPaidAt = new Date();
+          order.paymentGatewayPaymentId = paymentEntity.id;
+          await order.save({ session });
+
+          await financeService.processOrderFinance(order._id, session);
+
+          await session.commitTransaction();
+        } catch (err) {
+          await session.abortTransaction();
+          throw err;
+        } finally {
+          session.endSession();
+        }
 
         const user = await userModel.findById(order.userId);
         if (user) {

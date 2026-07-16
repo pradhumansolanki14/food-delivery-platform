@@ -4,14 +4,16 @@ import { useAdmin } from '../../context/AdminContext'
 import { 
   FiGrid, FiList, FiPlusCircle, FiFolder, FiGlobe, 
   FiImage, FiTag, FiShoppingBag, FiUsers, FiMessageSquare, 
-  FiSettings, FiUser, FiActivity, FiArrowLeft, FiArrowRight, FiX, FiCheckCircle, FiSend
+  FiSettings, FiUser, FiActivity, FiArrowLeft, FiArrowRight, FiX, FiCheckCircle, FiSend,
+  FiDollarSign, FiCreditCard
 } from 'react-icons/fi'
 
 const superAdminGroups = [
   {
     title: 'Overview',
     items: [
-      { to: '/dashboard', label: 'Console', sub: 'Analytics', icon: <FiGrid size={15} /> }
+      { to: '/dashboard', label: 'Console', sub: 'Analytics', icon: <FiGrid size={15} /> },
+      { to: '/finance', label: 'Finance', sub: 'Accounting', icon: <FiDollarSign size={15} /> }
     ]
   },
   {
@@ -46,7 +48,8 @@ const vendorGroups = [
   {
     title: 'Overview',
     items: [
-      { to: '/dashboard', label: 'Dashboard', sub: 'Realtime stats', icon: <FiGrid size={15} /> }
+      { to: '/dashboard', label: 'Dashboard', sub: 'Realtime stats', icon: <FiGrid size={15} /> },
+      { to: '/wallet', label: 'Wallet', sub: 'My earnings', icon: <FiCreditCard size={15} /> }
     ]
   },
   {
