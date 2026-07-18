@@ -39,21 +39,20 @@ const Field = ({ label, name, type = 'text', placeholder, icon, required, rows, 
   const inputType = isPassword ? (showPwd ? 'text' : 'password') : type;
 
   const baseClass = [
-    'w-full px-3.5 py-2.5 pl-9 rounded-xl border bg-white',
-    'text-xs font-semibold text-zinc-800 placeholder-zinc-400',
-    'outline-none transition-all duration-200',
+    'w-full px-4 py-3 pl-10 rounded-xl border bg-white text-xs font-medium text-zinc-800 placeholder-zinc-400',
+    'outline-none transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.02)]',
     err
-      ? 'border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100'
-      : 'border-zinc-200 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-950/5',
+      ? 'border-rose-300 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+      : 'border-zinc-200 hover:border-zinc-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10',
   ].join(' ');
 
   return (
-    <div className="space-y-1">
-      <label className="block text-[10px] font-bold text-zinc-450 uppercase tracking-widest">
-        {label}{required && <span className="text-rose-400 ml-0.5">*</span>}
+    <div className="space-y-1.5">
+      <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+        {label}{required && <span className="text-rose-500 ml-1 font-bold">*</span>}
       </label>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none flex items-center">
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none flex items-center transition-colors duration-250 focus-within:text-emerald-500">
           {icon}
         </span>
         {rows ? (
@@ -64,7 +63,7 @@ const Field = ({ label, name, type = 'text', placeholder, icon, required, rows, 
             placeholder={placeholder}
             rows={rows}
             autoFocus={name === autoFocusField}
-            className={`${baseClass} resize-none pt-2.5 pl-9`}
+            className={`${baseClass} resize-none pt-3 pl-10`}
           />
         ) : (
           <input
@@ -76,23 +75,23 @@ const Field = ({ label, name, type = 'text', placeholder, icon, required, rows, 
             required={required}
             autoFocus={name === autoFocusField}
             autoComplete={isPassword ? 'new-password' : 'off'}
-            className={`${baseClass} ${isPassword ? 'pr-9' : ''}`}
+            className={`${baseClass} ${isPassword ? 'pr-10' : ''}`}
           />
         )}
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPwd(p => !p)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors"
             aria-label="Toggle password visibility"
           >
-            {showPwd ? <FiEyeOff size={13} /> : <FiEye size={13} />}
+            {showPwd ? <FiEyeOff size={14} /> : <FiEye size={14} />}
           </button>
         )}
       </div>
       {err && (
-        <p className="flex items-center gap-1.5 text-[11px] text-rose-500 font-semibold">
-          <FiAlertCircle size={11} /> {err}
+        <p className="flex items-center gap-1.5 text-[11px] text-rose-600 font-medium mt-1 animate-pulse">
+          <FiAlertCircle size={12} className="flex-shrink-0" /> {err}
         </p>
       )}
     </div>
@@ -360,27 +359,32 @@ const BecomePartnerPage = () => {
               </div>
 
               {/* Step indicator */}
-              <div className="flex items-center gap-2 mb-8">
+              <div className="flex items-center gap-2 mb-8 select-none">
                 {STEPS.map((s, i) => (
                   <React.Fragment key={s.id}>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-extrabold transition-all duration-300 ${
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                         i < step
-                          ? 'bg-emerald-500 text-white'
+                          ? 'bg-emerald-500 text-white shadow-sm'
                           : i === step
-                            ? 'bg-zinc-950 text-white ring-2 ring-zinc-950/20 ring-offset-1'
-                            : 'bg-zinc-100 text-zinc-400'
+                            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/10 ring-4 ring-emerald-500/15'
+                            : 'bg-zinc-100 text-zinc-400 border border-zinc-200/40'
                       }`}>
                         {i < step ? <FiCheckCircle size={14} /> : i + 1}
                       </div>
-                      <span className={`hidden sm:block text-xs font-bold ${
-                        i === step ? 'text-zinc-900' : i < step ? 'text-zinc-400' : 'text-zinc-300'
-                      }`}>
-                        {s.label}
-                      </span>
+                      <div className="hidden sm:flex flex-col text-left">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider leading-none ${
+                          i === step ? 'text-emerald-700' : i < step ? 'text-zinc-500' : 'text-zinc-400'
+                        }`}>
+                          {s.label}
+                        </span>
+                        <span className="text-[9px] text-zinc-400 font-medium leading-normal mt-0.5">
+                          {s.desc}
+                        </span>
+                      </div>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <div className={`flex-1 h-px rounded-full transition-all duration-500 ${i < step ? 'bg-emerald-400' : 'bg-zinc-200'}`} />
+                      <div className={`flex-1 h-0.5 rounded-full transition-all duration-500 ${i < step ? 'bg-emerald-400' : 'bg-zinc-200'}`} />
                     )}
                   </React.Fragment>
                 ))}

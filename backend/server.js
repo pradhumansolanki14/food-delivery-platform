@@ -23,6 +23,10 @@ import paymentRouter from "./routes/paymentRoute.js";
 import financeRouter from "./routes/financeRoute.js";
 import settlementRouter from "./routes/settlementRoute.js";
 import refundRouter from "./routes/refundRoute.js";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { noSqlSanitize } from "./middlewares/sanitize.js";
+import { autoValidateObjectIds } from "./middlewares/validateObjectId.js";
 
 // Validate required environment variables before anything else
 const REQUIRED_ENV = [
@@ -35,10 +39,21 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-
-
 const app = express();
 const port = 4000;
+
+// Global security headers
+app.use(helmet());
+
+// Global rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many requests from this IP, please try again after 15 minutes." }
+});
+app.use("/api", apiLimiter);
 
 app.use(express.json({
   verify: (req, res, buf) => {
@@ -47,6 +62,10 @@ app.use(express.json({
 }));
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+
+// Global query sanitization & object id validation
+app.use(noSqlSanitize);
+app.use(autoValidateObjectIds);
 
 // Maintenance mode middleware — blocks customer routes when enabled
 const maintenanceModeMiddleware = async (req, res, next) => {
@@ -102,6 +121,15 @@ app.use("/api/settlements", settlementRouter);
 app.use("/api/refunds", refundRouter);
 
 app.get("/", (req, res) => res.send("API Working"));
+
+// Global unhandled exception handler to standardise errors
+app.use((err, req, res, next) => {
+  console.error("Unhandled Error:", err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: process.env.NODE_ENV === "production" ? "An internal server error occurred" : err.message
+  });
+});
 
 try {
   await connectDB();

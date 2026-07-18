@@ -41,9 +41,12 @@ export const markAsRead = async (req, res) => {
     const notificationId = req.params.id;
 
     const notification = await notificationModel.findById(notificationId);
-    if (!notification) return res.json({ success: false, message: "Notification not found" });
+    if (!notification) return res.status(404).json({ success: false, message: "Notification not found" });
 
     if (notification.userId) {
+      if (notification.userId.toString() !== userId) {
+        return res.status(403).json({ success: false, message: "Unauthorized" });
+      }
       notification.isRead = true;
     } else {
       if (!notification.readBy.includes(userId)) {
@@ -54,7 +57,7 @@ export const markAsRead = async (req, res) => {
     res.json({ success: true, message: "Notification marked as read" });
   } catch (error) {
     console.error("Error updating notification status:", error);
-    res.json({ success: false, message: "Error updating notification" });
+    res.status(500).json({ success: false, message: "Error updating notification" });
   }
 };
 
@@ -88,9 +91,12 @@ export const deleteNotification = async (req, res) => {
     const notificationId = req.params.id;
 
     const notification = await notificationModel.findById(notificationId);
-    if (!notification) return res.json({ success: false, message: "Notification not found" });
+    if (!notification) return res.status(404).json({ success: false, message: "Notification not found" });
 
     if (notification.userId) {
+      if (notification.userId.toString() !== userId) {
+        return res.status(403).json({ success: false, message: "Unauthorized" });
+      }
       // If it is a personal notification, we can delete it from the DB
       await notification.deleteOne();
     } else {
@@ -103,7 +109,7 @@ export const deleteNotification = async (req, res) => {
     res.json({ success: true, message: "Notification deleted" });
   } catch (error) {
     console.error("Error deleting notification:", error);
-    res.json({ success: false, message: "Error deleting notification" });
+    res.status(500).json({ success: false, message: "Error deleting notification" });
   }
 };
 

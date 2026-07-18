@@ -105,8 +105,8 @@ const Login = () => {
           <form onSubmit={onSubmit} className="space-y-4">
             {/* Email field */}
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-zinc-450 uppercase tracking-widest">Email Address</label>
-              <div className="relative flex items-center bg-white border border-zinc-200 rounded-xl px-3.5 py-2.5 focus-within:border-zinc-950 focus-within:ring-1 focus-within:ring-zinc-950 transition-all">
+              <label className="block text-[10px] font-bold text-zinc-550 uppercase tracking-wider">Email Address</label>
+              <div className="relative flex items-center bg-white border border-zinc-250 rounded-xl px-4 py-3 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
                 <FiMail className="text-zinc-400 mr-2.5 flex-shrink-0" size={14} />
                 <input
                   type="email"
@@ -114,7 +114,7 @@ const Login = () => {
                   onChange={(e) => setData((d) => ({ ...d, email: e.target.value }))}
                   placeholder={isPartner ? "partner@restaurant.com" : "admin@cravearc.com"}
                   required
-                  className="bg-transparent border-none outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full"
+                  className="bg-transparent border-none outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full font-medium"
                 />
               </div>
             </div>
@@ -122,9 +122,9 @@ const Login = () => {
             {/* Password field */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-[10px] font-bold text-zinc-450 uppercase tracking-widest">Password</label>
+                <label className="block text-[10px] font-bold text-zinc-550 uppercase tracking-wider">Password</label>
               </div>
-              <div className="relative flex items-center bg-white border border-zinc-200 rounded-xl px-3.5 py-2.5 focus-within:border-zinc-950 focus-within:ring-1 focus-within:ring-zinc-950 transition-all">
+              <div className="relative flex items-center bg-white border border-zinc-250 rounded-xl px-4 py-3 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
                 <FiLock className="text-zinc-400 mr-2.5 flex-shrink-0" size={14} />
                 <input
                   type={showPassword ? "text" : "password"}
@@ -132,12 +132,12 @@ const Login = () => {
                   onChange={(e) => setData((d) => ({ ...d, password: e.target.value }))}
                   placeholder="••••••••"
                   required
-                  className="bg-transparent border-none outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full pr-7"
+                  className="bg-transparent border-none outline-none text-xs text-zinc-800 placeholder-zinc-400 w-full pr-7 font-medium"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(p => !p)}
-                  className="absolute right-3.5 text-zinc-400 hover:text-zinc-700 transition-colors"
+                  className="absolute right-4 text-zinc-400 hover:text-zinc-700 transition-colors"
                   aria-label="Toggle password view"
                 >
                   {showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}

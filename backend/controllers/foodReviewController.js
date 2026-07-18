@@ -92,7 +92,7 @@ const replyToReview = async (req, res) => {
       return res.json({ success: false, message: "Review not found" });
     }
 
-    if (review.restaurantId !== req.restaurantId) {
+    if (review.restaurantId?.toString() !== req.restaurantId) {
       return res.status(403).json({
         success: false,
         message: "Review does not belong to your restaurant"

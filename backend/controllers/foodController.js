@@ -130,11 +130,13 @@ const getFood = async (req, res) => {
 const updateFood = async (req, res) => {
   try {
     const food = await foodModel.findById(req.params.id);
-    if (!food) return res.json({ success: false, message: "Food not found" });
+    if (!food) return res.status(404).json({ success: false, message: "Food not found" });
 
     // Vendor authorization check
-    if (req.restaurantId && food.restaurantId.toString() !== req.restaurantId) {
-      return res.json({ success: false, message: "Not authorized to edit this item" });
+    if (req.adminRole === "vendor") {
+      if (!req.restaurantId || food.restaurantId.toString() !== req.restaurantId) {
+        return res.status(403).json({ success: false, message: "Not authorized to edit this item" });
+      }
     }
 
     let tagsArray = undefined;
@@ -207,10 +209,12 @@ const searchFood = async (req, res) => {
 const removeFood = async (req, res) => {
   try {
     const food = await foodModel.findById(req.body.id);
-    if (!food) return res.json({ success: false, message: "Food not found" });
+    if (!food) return res.status(404).json({ success: false, message: "Food not found" });
 
-    if (req.restaurantId && food.restaurantId.toString() !== req.restaurantId) {
-      return res.json({ success: false, message: "Not authorized" });
+    if (req.adminRole === "vendor") {
+      if (!req.restaurantId || food.restaurantId.toString() !== req.restaurantId) {
+        return res.status(403).json({ success: false, message: "Not authorized" });
+      }
     }
 
     if (food.image) {

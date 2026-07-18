@@ -73,11 +73,13 @@ const createCoupon = async (req, res) => {
 const toggleCoupon = async (req, res) => {
   try {
     const coupon = await couponModel.findById(req.params.id);
-    if (!coupon) return res.json({ success: false, message: "Not found" });
+    if (!coupon) return res.status(404).json({ success: false, message: "Not found" });
 
     // Scope check: vendor can only toggle their own restaurant's coupons
-    if (req.adminRole === "vendor" && coupon.restaurantId?.toString() !== req.restaurantId) {
-      return res.status(403).json({ success: false, message: "Not authorized" });
+    if (req.adminRole === "vendor") {
+      if (!req.restaurantId || !coupon.restaurantId || coupon.restaurantId.toString() !== req.restaurantId) {
+        return res.status(403).json({ success: false, message: "Not authorized" });
+      }
     }
 
     coupon.isActive = !coupon.isActive;
@@ -92,11 +94,13 @@ const toggleCoupon = async (req, res) => {
 const deleteCoupon = async (req, res) => {
   try {
     const coupon = await couponModel.findById(req.params.id);
-    if (!coupon) return res.json({ success: false, message: "Not found" });
+    if (!coupon) return res.status(404).json({ success: false, message: "Not found" });
 
     // Scope check: vendor can only delete their own restaurant's coupons
-    if (req.adminRole === "vendor" && coupon.restaurantId?.toString() !== req.restaurantId) {
-      return res.status(403).json({ success: false, message: "Not authorized" });
+    if (req.adminRole === "vendor") {
+      if (!req.restaurantId || !coupon.restaurantId || coupon.restaurantId.toString() !== req.restaurantId) {
+        return res.status(403).json({ success: false, message: "Not authorized" });
+      }
     }
 
     await couponModel.findByIdAndDelete(req.params.id);
@@ -110,11 +114,13 @@ const deleteCoupon = async (req, res) => {
 const updateCoupon = async (req, res) => {
   try {
     const coupon = await couponModel.findById(req.params.id);
-    if (!coupon) return res.json({ success: false, message: "Coupon not found" });
+    if (!coupon) return res.status(404).json({ success: false, message: "Coupon not found" });
 
     // Scope check: vendor can only edit their own restaurant's coupons
-    if (req.adminRole === "vendor" && coupon.restaurantId?.toString() !== req.restaurantId) {
-      return res.status(403).json({ success: false, message: "Not authorized" });
+    if (req.adminRole === "vendor") {
+      if (!req.restaurantId || !coupon.restaurantId || coupon.restaurantId.toString() !== req.restaurantId) {
+        return res.status(403).json({ success: false, message: "Not authorized" });
+      }
     }
 
     const { code, discountType, discount, minOrder, maxUses, expiresAt, description } = req.body;

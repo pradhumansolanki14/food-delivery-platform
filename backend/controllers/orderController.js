@@ -417,11 +417,14 @@ const adminStats = async (req, res) => {
 const getOrder = async (req, res) => {
   try {
     const order = await orderModel.findById(req.params.id);
-    if (!order) return res.json({ success: false, message: "Order not found" });
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    if (order.userId.toString() !== req.userId) {
+      return res.status(403).json({ success: false, message: "Not authorized to view this order" });
+    }
     res.json({ success: true, data: order });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: "Error" });
+    res.status(500).json({ success: false, message: "Error" });
   }
 };
 
