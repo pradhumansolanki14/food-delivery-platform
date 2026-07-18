@@ -40,7 +40,7 @@ if (missing.length > 0) {
 }
 
 const app = express();
-const port = 4000;
+const port = process.env.PORT || 4000;
 
 // Global security headers
 app.use(helmet());
@@ -224,7 +224,7 @@ try {
       console.error("Failed to run cuisines auto-synchronization:", err);
     }
 
-  app.listen(port, () => console.log(`Server started on http://localhost:${port}`));
+  app.listen(port, () => console.log(`Server started on port ${port}`));
 } catch (error) {
   console.error("[FATAL] MongoDB connection failed:", error.message);
   process.exit(1);
