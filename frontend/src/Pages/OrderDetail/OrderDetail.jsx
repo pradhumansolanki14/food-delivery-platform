@@ -300,7 +300,9 @@ const OrderDetail = () => {
                   <FiLock className="text-emerald-600" size={16} />
                 </div>
                 <div>
-                  <p className="font-poppins font-bold text-slate-905 text-sm">Stripe Payment Gateway</p>
+                  <p className="font-poppins font-bold text-slate-905 text-sm">
+                    {order.paymentGateway === "razorpay" ? "Razorpay Secure Payment" : order.paymentGateway ? order.paymentGateway.toUpperCase() : "Secure Payment Gateway"}
+                  </p>
                   <div className="mt-1.5">
                     <Badge variant={order.payment ? 'success' : 'warning'} size="sm" rounded="md" className="font-bold">
                       {order.payment ? 'Payment Confirmed' : 'Payment Pending'}

@@ -3,28 +3,16 @@ import userModel from "../models/userModel.js";
 import adminModel from "../models/adminModel.js";
 import mongoose from "mongoose";
 import * as financeService from "../services/financeService.js";
-import Stripe from "stripe";
 import couponModel from "../models/couponModel.js";
 import settingsModel from "../models/settingsModel.js";
 import restaurantModel from "../models/restaurantModel.js";
 import { createNotification } from "../helpers/notificationHelper.js";
 import { sendOrderConfirmationEmail, sendOrderCancelledEmail } from "../services/emailService.js";
 
-// Lazily initialized so dotenv is loaded first
-let stripe;
-const getStripe = () => {
-  if (!stripe) stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  return stripe;
-};
-
 // ─── Place Order ─────────────────────────────────────────────
 const placeOrder = async (req, res) => {
   const frontend_url = process.env.FRONTEND_URL || "http://localhost:5173";
   try {
-    // Check Stripe configuration
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(500).json({ success: false, message: "Payment processing is not configured" });
-    }
 
     const userId = req.userId;
 
@@ -103,24 +91,6 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    // ── Build Stripe line items ────────────────────────────────
-    const line_items = req.body.items.map((item) => ({
-      price_data: {
-        currency: currency.toLowerCase(),
-        product_data: { name: item.name },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
-    line_items.push({
-      price_data: {
-        currency: currency.toLowerCase(),
-        product_data: { name: "Delivery Charges" },
-        unit_amount: Math.round(deliveryFee * 100),
-      },
-      quantity: 1,
-    });
-
     res.json({ success: true, orderId: newOrder._id.toString() });
   } catch (error) {
     console.error("Order Placement Error:", error);
@@ -130,65 +100,8 @@ const placeOrder = async (req, res) => {
 
 // ─── Verify Order ─────────────────────────────────────────────
 const verifyOrder = async (req, res) => {
-  const { success, sessionId } = req.body;
-  try {
-    if (success === "true" && sessionId) {
-      const session = await getStripe().checkout.sessions.retrieve(sessionId);
-      if (session.payment_status !== "paid") {
-        return res.json({ success: false, message: "Payment not confirmed" });
-      }
-      
-      const order = await orderModel.findByIdAndUpdate(session.metadata.orderId, { payment: true, status: "Food Processing" }, { new: true });
-      const user = await userModel.findById(session.metadata.userId);
-      
-      if (order && user) {
-        // 1. Notify Customer
-        await createNotification({
-          userId: user._id,
-          title: "Order Confirmed",
-          message: `Your order #${order._id.toString().slice(-6)} has been confirmed!`,
-          type: "order",
-          link: "/myorders",
-          role: "customer"
-        });
-
-        // 2. Notify Vendor
-        const restaurant = await restaurantModel.findById(order.restaurantId);
-        if (restaurant) {
-          await createNotification({
-            userId: restaurant.ownerId,
-            title: "New Order Received",
-            message: `New order #${order._id.toString().slice(-6)} from ${user.name}!`,
-            type: "order",
-            link: "/orders",
-            role: "vendor"
-          });
-        }
-
-        // 3. Send confirmation email
-        try {
-          await sendOrderConfirmationEmail(user.email, user.name, order._id.toString(), order.amount, order.items || []);
-        } catch (err) {
-          console.error("Failed to send order confirmation email:", err);
-        }
-
-        // Clear user cart
-        const cartData = user.cartData || {};
-        if (Array.isArray(order.items)) {
-          order.items.forEach(item => {
-            delete cartData[item._id || item.id];
-          });
-        }
-        await userModel.findByIdAndUpdate(session.metadata.userId, { cartData });
-      }
-      
-      return res.json({ success: true, message: "Order confirmed" });
-    }
-    return res.json({ success: false, message: "Payment failed" });
-  } catch (error) {
-    console.error("Order Verification Error:", error);
-    res.json({ success: false, message: "Error verifying order" });
-  }
+  // Stripe verify is deprecated because Razorpay is the primary gateway
+  return res.json({ success: false, message: "Stripe checkout session verification is disabled. Please verify via Razorpay routes." });
 };
 
 // ─── User Orders ─────────────────────────────────────────────

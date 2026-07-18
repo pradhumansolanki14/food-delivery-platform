@@ -30,7 +30,7 @@ import { autoValidateObjectIds } from "./middlewares/validateObjectId.js";
 
 // Validate required environment variables before anything else
 const REQUIRED_ENV = [
-  "MONGODB_URI", "JWT_SECRET", "STRIPE_SECRET_KEY", "ADMIN_SECRET_KEY",
+  "MONGODB_URI", "JWT_SECRET", "ADMIN_SECRET_KEY",
   "CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"
 ];
 const missing = REQUIRED_ENV.filter(k => !process.env[k]);

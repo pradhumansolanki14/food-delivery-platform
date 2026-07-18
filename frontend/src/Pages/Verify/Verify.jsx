@@ -49,7 +49,7 @@ const Verify = () => {
 
         <div>
           <h2 className="font-poppins font-extrabold text-lg text-slate-900 leading-tight">Verifying Payment</h2>
-          <p className="text-xs text-slate-400 font-semibold mt-1">Securing your order transaction with Stripe...</p>
+          <p className="text-xs text-slate-400 font-semibold mt-1">Securing your order transaction with Razorpay...</p>
         </div>
 
         {/* Pulse indicator line */}
