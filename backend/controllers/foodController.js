@@ -83,16 +83,71 @@ const listFood = async (req, res) => {
   try {
     const filter = {};
     if (req.query.restaurantId) filter.restaurantId = req.query.restaurantId;
-    if (req.query.isVeg === "true") filter.isVeg = true;
+    if (req.query.isVeg === "true" || req.query.vegOnly === "true") filter.isVeg = true;
+    if (req.query.category && req.query.category !== "All") filter.category = req.query.category;
+    
+    if (req.query.search) {
+      const q = req.query.search;
+      filter.$or = [
+        { name: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } }
+      ];
+    }
+    
+    if (req.query.priceRange) {
+      if (req.query.priceRange === "under-150") filter.price = { $lt: 150 };
+      else if (req.query.priceRange === "150-500") filter.price = { $gte: 150, $lte: 500 };
+      else if (req.query.priceRange === "over-500") filter.price = { $gt: 500 };
+    }
+    
+    if (req.query.inStockOnly === "true" || req.query.isAvailable === "true") {
+      filter.isAvailable = true;
+    }
+    
+    if (req.query.maxPrepTime && req.query.maxPrepTime !== "999") {
+      filter.preparationTime = { $lte: Number(req.query.maxPrepTime) };
+    }
+
     const foods = await foodModel.find(filter).populate("restaurantId", "name logo isOpen isApproved deliveryFee");
-    // Only show foods from approved, open restaurants to customers
-    // If restaurant filter is explicit, show regardless (for vendor dashboard)
     const filtered = req.query.restaurantId
       ? foods
       : foods.filter(f => f.restaurantId?.isApproved);
     
     const foodsWithStats = await attachRatingStats(filtered);
-    res.json({ success: true, data: foodsWithStats });
+    let finalItems = foodsWithStats;
+    
+    if (req.query.minRating && req.query.minRating !== "0") {
+      const minRat = parseFloat(req.query.minRating);
+      finalItems = finalItems.filter(f => f.averageRating >= minRat);
+    }
+    
+    if (req.query.sortBy === "price-asc") {
+      finalItems.sort((a, b) => a.price - b.price);
+    } else if (req.query.sortBy === "price-desc") {
+      finalItems.sort((a, b) => b.price - a.price);
+    } else if (req.query.sortBy === "name") {
+      finalItems.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    
+    if (req.query.page) {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 8;
+      const skip = (page - 1) * limit;
+      const paginated = finalItems.slice(skip, skip + limit);
+      
+      res.json({
+        success: true,
+        data: paginated,
+        pagination: {
+          page,
+          limit,
+          total: finalItems.length,
+          pages: Math.ceil(finalItems.length / limit)
+        }
+      });
+    } else {
+      res.json({ success: true, data: finalItems });
+    }
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: "Error" });
@@ -250,8 +305,36 @@ const listRestaurants = async (req, res) => {
       filter.featured = true;
     }
     
-    const restaurants = await restaurantModel.find(filter).sort({ createdAt: -1 });
-    res.json({ success: true, data: restaurants });
+    // Filter by search query
+    if (req.query.search) {
+      const q = req.query.search;
+      filter.name = { $regex: q, $options: "i" };
+    }
+    
+    if (req.query.page) {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 8;
+      const skip = (page - 1) * limit;
+      
+      const [restaurants, total] = await Promise.all([
+        restaurantModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+        restaurantModel.countDocuments(filter)
+      ]);
+      
+      res.json({
+        success: true,
+        data: restaurants,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      });
+    } else {
+      const restaurants = await restaurantModel.find(filter).sort({ createdAt: -1 });
+      res.json({ success: true, data: restaurants });
+    }
   } catch (error) {
     console.error(error);
     res.json({ success: false, message: "Error" });
