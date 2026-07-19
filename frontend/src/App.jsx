@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 
 // ── Layout ────────────────────────────────────────────────────
@@ -32,6 +32,27 @@ const PartnerLandingPage = lazy(() => import('./Pages/PartnerLanding/PartnerLand
 const VerifyEmailPage = lazy(() => import('./Pages/VerifyEmail/VerifyEmailPage'))
 const ForgotPasswordPage = lazy(() => import('./Pages/ForgotPassword/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./Pages/ResetPassword/ResetPasswordPage'))
+
+// Route guard that only allows guest/unauthenticated users.
+// Authenticated customers are redirected to the customer homepage.
+// Authenticated vendors/admins are redirected to their vendor/admin panel.
+const PublicOnlyRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  const adminToken = localStorage.getItem("adminToken");
+
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (adminToken) {
+    const vendorAppUrl = import.meta.env.VITE_VENDOR_APP || "http://localhost:5174";
+    // Redirect to the external vendor dashboard
+    window.location.href = vendorAppUrl;
+    return null;
+  }
+
+  return children;
+};
 
 const App = () => {
   const [showLogin, setShowLogin] = useState(false)
@@ -127,8 +148,16 @@ const App = () => {
           <Route path='/restaurant/:id' element={<RestaurantDetail />} />
 
           {/* Partner landing page → registration funnel */}
-          <Route path='/become-a-partner' element={<PartnerLandingPage />} />
-          <Route path='/vendor-register'  element={<BecomePartnerPage />} />
+          <Route path='/become-a-partner' element={
+            <PublicOnlyRoute>
+              <PartnerLandingPage />
+            </PublicOnlyRoute>
+          } />
+          <Route path='/vendor-register'  element={
+            <PublicOnlyRoute>
+              <BecomePartnerPage />
+            </PublicOnlyRoute>
+          } />
 
           {/* Production Authentication (P3-R2) */}
           <Route path='/verify-email' element={<VerifyEmailPage />} />
