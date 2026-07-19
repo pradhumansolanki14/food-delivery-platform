@@ -8,6 +8,7 @@ const StoreContextProvider = (props) => {
   const url = import.meta.env.VITE_API_URL || "http://localhost:4000";
   const [token, setToken] = useState("");
   const [food_list, setFoodList] = useState([]);
+  const [foodListLoaded, setFoodListLoaded] = useState(false);
   const [favorites, setFavorites] = useState({ foods: [], restaurants: [] });
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState("");
@@ -101,8 +102,14 @@ const StoreContextProvider = (props) => {
 
   // ─── Food list ─────────────────────────────────────────────
   const fetchFoodList = async () => {
-    const response = await axios.get(url + "/api/food/list");
-    setFoodList(response.data.data);
+    try {
+      const response = await axios.get(url + "/api/food/list");
+      setFoodList(response.data.data || []);
+    } catch {
+      setFoodList([]);
+    } finally {
+      setFoodListLoaded(true);
+    }
   };
 
   const loadCartData = async (tkn) => {
@@ -154,6 +161,7 @@ const StoreContextProvider = (props) => {
 
   const contextValue = {
     food_list,
+    foodListLoaded,
     cartItems,
     SetCartItems,
     addToCart,

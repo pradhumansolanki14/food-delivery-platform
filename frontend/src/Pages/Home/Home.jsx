@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiTruck, FiShield, FiThumbsUp, FiCheckCircle, FiChevronRight, 
   FiSearch, FiMapPin, FiStar, FiArrowRight, FiChevronDown, 
-  FiZap, FiPackage, FiMessageSquare, FiUser, FiActivity 
+  FiZap, FiPackage, FiMessageSquare, FiUser, FiActivity, FiHome
 } from 'react-icons/fi';
 import { StoreContext } from '../../context/StoreContext';
 import FoodItem from '../../components/FoodItem/FoodItem';
@@ -123,7 +123,7 @@ const HomeLocationSelector = ({ url, token }) => {
   );
 };
 
-// ─── Hero Section with Centered Search Experience ───────────
+// ─── Hero Section — Premium Centered Dark Design ─────────────
 const Hero = ({ setShowLogin }) => {
   const navigate = useNavigate();
   const { url, token } = useContext(StoreContext);
@@ -139,104 +139,105 @@ const Hero = ({ setShowLogin }) => {
   };
 
   return (
-    <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-slate-950 text-white pt-24 pb-20 lg:py-28">
-      {/* Background ambient flows */}
-      <div 
-        className="absolute top-0 right-0 w-[650px] h-[650px] rounded-full opacity-20 pointer-events-none filter blur-[130px]" 
-        style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)', transform: 'translate(10%, -20%)' }} 
+    <section className="relative min-h-[92vh] flex items-center overflow-hidden bg-slate-950 text-white pt-24 pb-20 lg:py-32">
+      {/* Ambient glow blobs */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full opacity-[0.12] pointer-events-none filter blur-[140px]"
+        style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 65%)' }}
       />
-      <div 
-        className="absolute bottom-0 left-0 w-[550px] h-[550px] rounded-full opacity-10 pointer-events-none filter blur-[110px]" 
-        style={{ background: 'radial-gradient(circle, #065f46 0%, transparent 70%)', transform: 'translate(-20%, 20%)' }} 
+      <div
+        className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full opacity-[0.07] pointer-events-none filter blur-[120px]"
+        style={{ background: 'radial-gradient(circle, #065f46 0%, transparent 70%)', transform: 'translate(20%, 20%)' }}
       />
-      {/* Subtle dot mesh overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.025] bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px]" />
+      {/* Dot mesh */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.022] bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:28px_28px]" />
 
       <Container>
-        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          
-          {/* Left Hero Content */}
-          <div className="lg:col-span-7 order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left relative z-10">
-            {/* Speed Badge */}
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl mb-6 shadow-emerald-sm"
-            >
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black text-emerald-400 tracking-wider uppercase">Lightning Fast Delivery</span>
-            </motion.div>
+        <div className="flex flex-col items-center text-center relative z-10 max-w-4xl mx-auto">
 
-            {/* Premium Headline */}
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-poppins text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] tracking-tight mb-6"
-            >
-              Your favorite cravings,<br />
-              delivered in <span className="text-gradient-emerald">flow.</span>
-            </motion.h1>
+          {/* Top badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="inline-flex items-center gap-2.5 px-4 py-2 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl mb-8"
+          >
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">Lightning Fast Delivery</span>
+          </motion.div>
 
-            {/* Supporting Text */}
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl mb-8 font-semibold"
-            >
-              Order premium dishes from the city&apos;s best rated culinary houses. Fresh ingredients, chef-crafted recipes, and contactless delivery.
-            </motion.p>
+          {/* Main headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-poppins text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight mb-6"
+          >
+            Your favorite cravings,<br />
+            delivered in{' '}
+            <span className="text-gradient-emerald">flow.</span>
+          </motion.h1>
 
-            {/* Search Centerpiece */}
-            <motion.form 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              onSubmit={handleSearchSubmit} 
-              className="w-full max-w-xl flex flex-col sm:flex-row gap-3 mb-10 bg-slate-900/60 border border-slate-800 rounded-3xl p-2.5 focus-within:border-emerald-500/80 focus-within:bg-slate-900/90 focus-within:shadow-[0_8px_35px_rgba(16,185,129,0.15)] transition-all duration-500"
-            >
-              {/* Location Select Beside Search */}
-              <HomeLocationSelector url={url} token={token} />
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl mb-10 font-semibold"
+          >
+            Order premium dishes from the city&apos;s best rated culinary houses. Fresh ingredients, chef-crafted recipes, and contactless delivery.
+          </motion.p>
 
-              {/* Search input bar */}
-              <div className="flex-1 flex items-center gap-2.5 px-2">
-                <FiSearch className="text-slate-500 flex-shrink-0" size={17} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search restaurants, cuisines or dishes..."
-                  className="flex-1 bg-transparent text-sm font-semibold text-white placeholder-slate-500 outline-none"
-                />
-              </div>
+          {/* Search bar */}
+          <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            onSubmit={handleSearchSubmit}
+            className="w-full max-w-2xl flex flex-col sm:flex-row gap-3 mb-8 bg-slate-900/60 border border-slate-800 rounded-3xl p-2.5 focus-within:border-emerald-500/70 focus-within:shadow-[0_8px_40px_rgba(16,185,129,0.13)] transition-all duration-500"
+          >
+            {/* Location selector */}
+            <HomeLocationSelector url={url} token={token} />
+
+            {/* Search input */}
+            <div className="flex-1 flex items-center gap-2.5 px-2 min-w-0">
+              <FiSearch className="text-slate-500 flex-shrink-0" size={17} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search restaurants, cuisines or dishes..."
+                className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-white placeholder-slate-500 outline-none"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              className="font-bold shadow-emerald-sm py-3.5 px-7 rounded-2xl whitespace-nowrap flex-shrink-0"
+            >
+              Search
+            </Button>
+          </motion.form>
+
+          {/* CTA buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-wrap gap-4 justify-center mb-6"
+          >
+            <Button
+              onClick={() => navigate('/restaurants')}
+              variant="primary"
+              size="lg"
+              className="font-bold shadow-emerald"
+            >
+              Browse Restaurants
+            </Button>
+            {!token && (
               <Button
-                type="submit"
-                variant="primary"
-                size="md"
-                className="font-bold shadow-emerald-sm hover:shadow-emerald py-3.5 px-6 rounded-2xl whitespace-nowrap"
-              >
-                Search
-              </Button>
-            </motion.form>
-
-            {/* Actions Grid */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-wrap gap-4 mb-10 w-full justify-center lg:justify-start"
-            >
-              <Button 
-                onClick={() => navigate('/restaurants')}
-                variant="primary"
-                size="lg"
-                className="font-bold shadow-emerald"
-              >
-                Browse Restaurants
-              </Button>
-              <Button 
                 onClick={() => navigate('/become-a-partner')}
                 variant="outline"
                 size="lg"
@@ -244,79 +245,15 @@ const Hero = ({ setShowLogin }) => {
               >
                 Become a Partner
               </Button>
-            </motion.div>
-
-            {/* Micro Stats Grid */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="grid grid-cols-4 gap-6 sm:gap-8 w-full max-w-md pt-6 border-t border-slate-900"
-            >
-              {[
-                { value: "120+", label: "Partners" },
-                { value: "35k+", label: "Deliveries" },
-                { value: "20m", label: "Avg Speed" },
-                { value: "4.9★", label: "Rating" },
-              ].map((s, i) => (
-                <div key={i} className="text-center lg:text-left">
-                  <p className="text-lg font-bold text-white leading-tight font-poppins">{s.value}</p>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{s.label}</p>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Right Hero Visuals */}
-          <div className="lg:col-span-5 order-1 lg:order-2 relative flex items-center justify-center">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 220, damping: 25, delay: 0.2 }}
-              className="relative w-full max-w-md"
-            >
-              {/* Circular backing glow */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-950/45 via-emerald-800/10 to-transparent scale-[0.9] shadow-[0_0_80px_rgba(16,185,129,0.06)] pointer-events-none" />
-
-              <img
-                src="/header_img.png"
-                alt={`${BRAND.NAME} delicious fresh cuisine`}
-                className="relative w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-float"
-                style={{ maxHeight: '430px' }}
-              />
-
-              {/* Floating micro cards */}
-              <div className="absolute top-10 -left-6 bg-slate-900/90 backdrop-blur-md rounded-2xl p-3.5 shadow-2xl border border-slate-805/80 animate-slideRight">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-base">🥗</div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-200">Fresh Gourmet</p>
-                    <p className="text-[10px] text-emerald-450 font-extrabold">100% Organic</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute bottom-10 -right-6 bg-slate-900/90 backdrop-blur-md rounded-2xl p-3.5 shadow-2xl border border-slate-805/80 animate-slideUp delay-300">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center text-base">🍔</div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-200">Fast Bites</p>
-                    <div className="flex gap-0.5 mt-0.5">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <FiStar key={star} size={9} className="text-amber-400 fill-amber-400" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+            )}
+          </motion.div>
 
         </div>
       </Container>
     </section>
   );
 };
+
 
 // ─── Popular Categories Quick List Bar ──────────────────────
 const PopularCategories = () => {
@@ -520,10 +457,12 @@ const FeaturedRestaurants = () => {
             ))}
           </div>
         ) : restaurants.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center max-w-md mx-auto">
-            <span className="text-4xl block mb-3">🏪</span>
-            <h3 className="font-poppins font-bold text-slate-800 text-lg mb-1">No Restaurants Available</h3>
-            <p className="text-slate-400 text-sm">Please try again later or check your network connection.</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center max-w-sm mx-auto bg-white border border-slate-100 rounded-3xl shadow-card p-8 animate-fadeUp">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-5 shadow-xs">
+              <FiHome size={28} />
+            </div>
+            <h3 className="font-poppins font-bold text-slate-800 text-lg mb-2">No Restaurants Available</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">Please try again later or check your network connection.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -539,7 +478,7 @@ const FeaturedRestaurants = () => {
 
 // ─── Featured Foods (Trending) Section ───────────────────────
 const FeaturedFoods = () => {
-  const { food_list } = useContext(StoreContext);
+  const { food_list, foodListLoaded } = useContext(StoreContext);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("popular"); // "popular" | "rated" | "new" | "offers"
 
@@ -609,7 +548,8 @@ const FeaturedFoods = () => {
           </div>
         </div>
 
-        {food_list.length === 0 ? (
+        {/* Show skeletons only while still loading */}
+        {!foodListLoaded ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(idx => (
               <div key={idx} className="bg-white rounded-3xl border border-slate-100 overflow-hidden p-4 space-y-4 shadow-sm">
@@ -619,11 +559,27 @@ const FeaturedFoods = () => {
               </div>
             ))}
           </div>
+        ) : food_list.length === 0 ? (
+          /* Loaded but no dishes exist at all */
+          <div className="flex justify-center py-8">
+            <div className="flex flex-col items-center justify-center text-center max-w-sm w-full bg-white border border-slate-100 rounded-3xl shadow-sm p-10">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
+                <FiZap size={26} className="text-emerald-500" />
+              </div>
+              <h3 className="font-poppins font-bold text-slate-800 text-base mb-2">No Dishes Available</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">Please try again later or check your network connection.</p>
+            </div>
+          </div>
         ) : discoveryItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-50/50 border border-dashed border-slate-200 rounded-3xl p-6">
-            <span className="text-2xl mb-2">🍽️</span>
-            <h3 className="font-poppins font-bold text-slate-800 text-sm mb-1">No items found</h3>
-            <p className="text-slate-400 text-xs max-w-xs">There are currently no items under this showcase. Explore other categories or check back later!</p>
+          /* Loaded, dishes exist, but this tab filter yields nothing */
+          <div className="flex justify-center py-8">
+            <div className="flex flex-col items-center justify-center text-center max-w-sm w-full bg-white border border-slate-100 rounded-3xl shadow-sm p-10">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
+                <FiZap size={26} className="text-emerald-500" />
+              </div>
+              <h3 className="font-poppins font-bold text-slate-800 text-base mb-2">No items found</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">There are currently no items under this tab. Try another category!</p>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -964,31 +920,35 @@ const CTASection = () => {
 
 // ─── Main Homepage Component ──────────────────────────────
 const Home = ({ setShowLogin }) => {
+  const { token } = useContext(StoreContext);
+
   return (
     <div className="bg-white flex flex-col min-h-screen">
       {/* Hero Header & Search Centerpiece */}
       <Hero setShowLogin={setShowLogin} />
 
       {/* Quick Search Categories */}
-      <PopularCategories />
+      {token && <PopularCategories />}
 
       {/* Live System Announcements Broadcast */}
-      <AnnouncementsFeed />
+      {token && <AnnouncementsFeed />}
 
       {/* Dynamic Banner Carousel wrapper */}
-      <div className="py-8 bg-white border-b border-slate-50">
-        <Container>
-          <div className="rounded-3xl overflow-hidden shadow-card border border-slate-100/60">
-            <BannerCarousel />
-          </div>
-        </Container>
-      </div>
+      {token && (
+        <div className="py-8 bg-white border-b border-slate-50">
+          <Container>
+            <div className="rounded-3xl overflow-hidden shadow-card border border-slate-100/60">
+              <BannerCarousel />
+            </div>
+          </Container>
+        </div>
+      )}
 
       {/* Main categories navigation grid */}
       <CategoriesSection />
 
       {/* Special Offers Promotional Section */}
-      <SpecialOffers />
+      {token && <SpecialOffers />}
 
       {/* Featured dynamic restaurants */}
       <FeaturedRestaurants />
@@ -996,17 +956,22 @@ const Home = ({ setShowLogin }) => {
       {/* Popular dynamic food items */}
       <FeaturedFoods />
 
-      {/* Journey Timeline */}
-      <HowItWorks />
-
-      {/* Tomato benefits card checklist */}
-      <WhyChooseUs />
-
       {/* Customer Reviews demo carousel */}
       <Testimonials />
 
-      {/* Brand CTA checkout section */}
-      <CTASection />
+      {/* Onboarding and marketing modules only displayed for guests */}
+      {!token && (
+        <>
+          {/* Journey Timeline */}
+          <HowItWorks />
+
+          {/* Tomato benefits card checklist */}
+          <WhyChooseUs />
+
+          {/* Brand CTA checkout section */}
+          <CTASection />
+        </>
+      )}
     </div>
   );
 };
