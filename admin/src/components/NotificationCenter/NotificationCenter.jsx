@@ -126,7 +126,7 @@ const NotificationCenter = () => {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2.5 w-[340px] bg-white rounded-xl shadow-lg border border-zinc-200/60 p-3 z-50 animate-fadeIn">
+        <div className="fixed left-3 right-3 top-[64px] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2.5 w-auto sm:w-[340px] max-w-[380px] mx-auto sm:mx-0 bg-white rounded-xl shadow-lg border border-zinc-200/60 p-3 z-50 animate-fadeIn">
           {/* Header */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-100">
             <span className="text-[11px] font-bold text-zinc-800 uppercase tracking-wider font-mono">Console Notifications</span>

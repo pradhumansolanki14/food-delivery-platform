@@ -135,13 +135,23 @@ const NotificationCenter = ({ isHome, scrolled }) => {
       {/* Dropdown Card */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2.5 w-[360px] bg-white rounded-2xl shadow-xl border border-slate-100 p-3 z-[100]"
-          >
+          <>
+            {/* Mobile Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 bg-slate-950/20 backdrop-blur-2xs sm:hidden z-[90]"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="fixed left-3 right-3 top-[72px] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2.5 w-auto sm:w-[360px] max-w-[400px] mx-auto sm:mx-0 bg-white rounded-2xl shadow-2xl border border-slate-100/90 p-3.5 z-[100]"
+            >
             {/* Dropdown Header */}
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
               <span className="text-xs font-poppins font-extrabold text-slate-900 tracking-wide">Notifications</span>
@@ -231,7 +241,8 @@ const NotificationCenter = ({ isHome, scrolled }) => {
               )}
             </div>
           </motion.div>
-        )}
+        </>
+      )}
       </AnimatePresence>
     </div>
   );

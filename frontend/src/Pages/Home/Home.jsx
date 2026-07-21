@@ -15,6 +15,7 @@ import { Button, Container, Card, Skeleton } from '../../components/ui';
 import { BRAND } from '../../constants/brand';
 import ReviewsWidget from '../../components/Reviews/ReviewsWidget';
 import AnnouncementsFeed from '../../components/AnnouncementsFeed/AnnouncementsFeed';
+import SearchBar from '../../components/SearchBar/SearchBar';
 import { toast } from 'react-hot-toast';
 
 // ─── Shared Dynamic Location Selector for Search Centerpiece ───
@@ -214,45 +215,7 @@ const Hero = ({ setShowLogin }) => {
 };
 
 
-// ─── Popular Categories Quick List Bar ──────────────────────
-const PopularCategories = () => {
-  const navigate = useNavigate();
-  const { url } = useContext(StoreContext);
-  const [trends, setTrends] = useState([]);
 
-  useEffect(() => {
-    const fetchTrends = async () => {
-      try {
-        const res = await axios.get(`${url}/api/search/trending`);
-        if (res.data.success) {
-          setTrends(res.data.data);
-        }
-      } catch (err) {
-        console.error("Error fetching trending searches:", err);
-      }
-    };
-    fetchTrends();
-  }, [url]);
-
-  return (
-    <section className="bg-slate-50 border-y border-slate-100 py-6">
-      <Container>
-        <div className="flex items-center gap-4 overflow-x-auto pb-1.5 scrollbar-hide">
-          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Trending Searches:</span>
-          {trends.map((c, i) => (
-            <button
-              key={i}
-              onClick={() => navigate(`/search?q=${c}`)}
-              className="flex-shrink-0 px-4 py-2 bg-white border border-slate-200/80 hover:border-emerald-300 text-xs font-bold text-slate-600 hover:text-emerald-600 rounded-xl transition-all duration-200 shadow-sm"
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-};
 
 // ─── Categories Section ────────────────────────────────────
 const CategoriesSection = () => {
@@ -280,12 +243,12 @@ const CategoriesSection = () => {
   return (
     <section className="py-6 sm:py-10 bg-white">
       <Container>
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-5 sm:mb-8">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-3">
-              <span className="text-[10px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Explore Categories</span>
+        <div className="flex items-end justify-between gap-3 mb-5 sm:mb-8">
+          <div className="min-w-0 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-50 border border-emerald-100 rounded-md sm:rounded-xl mb-1.5 sm:mb-3">
+              <span className="text-[9px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Explore Categories</span>
             </div>
-            <h2 className="font-poppins text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="font-poppins text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
               Explore your <span className="text-gradient-emerald">cravings</span>
             </h2>
           </div>
@@ -293,19 +256,20 @@ const CategoriesSection = () => {
             onClick={() => navigate('/categories')}
             variant="outline"
             size="sm"
-            rightIcon={<FiChevronRight />}
-            className="font-bold text-slate-600 hover:border-emerald-300 self-start sm:self-auto"
+            rightIcon={<FiChevronRight size={16} />}
+            className="font-bold text-slate-600 hover:border-emerald-300 flex-shrink-0 whitespace-nowrap !px-2.5 sm:!px-4"
+            aria-label="Explore All Categories"
           >
-            Explore All Categories
+            <span className="hidden sm:inline">Explore All Categories</span>
           </Button>
         </div>
 
         {/* Loading skeletons */}
         {loading && (
-          <div className="flex gap-3 sm:gap-6 md:gap-8 overflow-x-auto py-2 sm:py-4 pb-4 sm:pb-6 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+          <div className="flex gap-2.5 xs:gap-3 sm:gap-6 md:gap-8 overflow-x-auto py-2 sm:py-4 pb-4 sm:pb-6 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-              <div key={i} className="flex flex-col items-center gap-2 sm:gap-3 flex-shrink-0 animate-pulse min-w-[80px] sm:min-w-[96px] md:min-w-[128px] lg:min-w-[144px]">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full bg-slate-100" />
+              <div key={i} className="flex flex-col items-center gap-2 sm:gap-3 flex-shrink-0 animate-pulse min-w-[88px] xs:min-w-[96px] md:min-w-[128px] lg:min-w-[144px]">
+                <div className="w-[88px] h-[88px] xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full bg-slate-100" />
                 <div className="h-3 w-14 sm:h-3.5 sm:w-16 rounded bg-slate-100 mt-1.5" />
               </div>
             ))}
@@ -323,16 +287,16 @@ const CategoriesSection = () => {
 
         {/* Swiggy/Zomato style category scroll strip */}
         {!loading && featuredCategories.length > 0 && (
-          <div className="flex gap-3 sm:gap-6 md:gap-8 overflow-x-auto py-2 sm:py-4 pb-4 sm:pb-6 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+          <div className="flex gap-2.5 xs:gap-3 sm:gap-6 md:gap-8 overflow-x-auto py-2 sm:py-4 pb-4 sm:pb-6 scrollbar-hide -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
             {featuredCategories.map((item) => (
               <motion.button
                 key={item._id}
                 whileHover={{ y: -6 }}
                 onClick={() => navigate(`/menu?category=${item.name}`)}
-                className="group flex flex-col items-center gap-2 sm:gap-3 focus:outline-none flex-shrink-0 min-w-[80px] sm:min-w-[96px] md:min-w-[128px] lg:min-w-[144px]"
+                className="group flex flex-col items-center gap-2 sm:gap-3 focus:outline-none flex-shrink-0 min-w-[88px] xs:min-w-[96px] md:min-w-[128px] lg:min-w-[144px]"
               >
                 {/* Double nested container to completely prevent subpixel browser border clipping on rounded-full overflow */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full border-2 border-slate-100/50 group-hover:border-emerald-500 shadow-sm transition-all duration-300 bg-white p-0.5 flex-shrink-0 flex items-center justify-center">
+                <div className="w-[88px] h-[88px] xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full border-2 border-slate-100/50 group-hover:border-emerald-500 shadow-sm transition-all duration-300 bg-white p-0.5 flex-shrink-0 flex items-center justify-center">
                   <div className="w-full h-full rounded-full overflow-hidden bg-white">
                     {item.image ? (
                       <img
@@ -347,7 +311,7 @@ const CategoriesSection = () => {
                     )}
                   </div>
                 </div>
-                <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-700 group-hover:text-emerald-600 transition-colors tracking-tight text-center uppercase">
+                <span className="text-[11px] sm:text-xs font-extrabold text-slate-700 group-hover:text-emerald-600 transition-colors tracking-tight text-center uppercase">
                   {item.name}
                 </span>
               </motion.button>
@@ -388,23 +352,24 @@ const FeaturedRestaurants = () => {
   return (
     <section className="py-10 sm:py-20 bg-slate-50">
       <Container>
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-5 sm:mb-10">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-3">
-              <span className="text-[10px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Featured</span>
+        <div className="flex items-end justify-between gap-3 mb-5 sm:mb-10">
+          <div className="min-w-0 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-50 border border-emerald-100 rounded-md sm:rounded-xl mb-1.5 sm:mb-3">
+              <span className="text-[9px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Featured</span>
             </div>
-            <h2 className="font-poppins text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Best rated <span className="text-gradient-emerald">restaurants</span> near you
+            <h2 className="font-poppins text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Best rated <span className="text-gradient-emerald">restaurants</span> nearby
             </h2>
           </div>
           <Button
             onClick={() => navigate('/restaurants')}
             variant="outline"
             size="sm"
-            rightIcon={<FiChevronRight />}
-            className="font-bold text-slate-600 hover:border-emerald-300 self-start sm:self-auto"
+            rightIcon={<FiChevronRight size={16} />}
+            className="font-bold text-slate-600 hover:border-emerald-300 flex-shrink-0 whitespace-nowrap !px-2.5 sm:!px-4"
+            aria-label="Explore All Restaurants"
           >
-            Explore All Restaurants
+            <span className="hidden sm:inline">Explore All Restaurants</span>
           </Button>
         </div>
 
@@ -528,8 +493,8 @@ const FeaturedFoods = () => {
         {/* Header Block */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5 sm:mb-10">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-3">
-              <span className="text-[10px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Discovery</span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-50 border border-emerald-100 rounded-md sm:rounded-xl mb-1.5 sm:mb-3">
+              <span className="text-[9px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Discovery</span>
             </div>
             <h2 className="font-poppins text-lg sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
               Explore our <span className="text-gradient-emerald font-black">signature dishes</span>
@@ -537,7 +502,7 @@ const FeaturedFoods = () => {
           </div>
 
           {/* Discovery Selector Tabs */}
-          <div className="flex flex-wrap gap-2 bg-slate-50 border border-slate-100 p-1.5 rounded-2xl md:self-end">
+          <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 bg-slate-50 border border-slate-100 p-1 sm:p-1.5 rounded-2xl overflow-x-auto scrollbar-hide max-w-full md:self-end">
             {[
               { id: "popular", label: "Popular" },
               { id: "rated", label: "Highest Rated" },
@@ -547,7 +512,7 @@ const FeaturedFoods = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs font-bold transition-all duration-300 ${activeTab === tab.id
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap flex-shrink-0 transition-all duration-300 ${activeTab === tab.id
                   ? "bg-slate-900 text-white shadow-sm"
                   : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/50"
                   }`}
@@ -791,8 +756,8 @@ const SpecialOffers = () => {
       <Container>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-3.5 sm:mb-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-3">
-              <span className="text-[10px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Promotions</span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-50 border border-emerald-100 rounded-md sm:rounded-xl mb-1.5 sm:mb-3">
+              <span className="text-[9px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Promotions</span>
             </div>
             <h2 className="font-poppins text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight">
               Exclusive <span className="text-gradient-emerald">offers</span> for you
@@ -848,8 +813,8 @@ const WhyChooseUs = () => {
     <section className="py-12 sm:py-24 bg-white border-b border-slate-100">
       <Container>
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-4">
-            <span className="text-[10px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Benefits</span>
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-50 border border-emerald-100 rounded-md sm:rounded-xl mb-1.5 sm:mb-4">
+            <span className="text-[9px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Benefits</span>
           </div>
           <h2 className="font-poppins text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Why choose <span className="text-gradient-emerald">{BRAND.NAME}</span>?
@@ -912,8 +877,8 @@ const HowItWorks = () => {
     <section className="py-12 sm:py-24 bg-slate-50">
       <Container>
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-4">
-            <span className="text-[10px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Timeline</span>
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-50 border border-emerald-100 rounded-md sm:rounded-xl mb-1.5 sm:mb-4">
+            <span className="text-[9px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Timeline</span>
           </div>
           <h2 className="font-poppins text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             How it works
@@ -1015,11 +980,14 @@ const Home = ({ setShowLogin }) => {
       {/* Hero Header & Search Centerpiece */}
       {!token && <Hero setShowLogin={setShowLogin} />}
 
-      {/* Quick Search Categories */}
-      {token && <PopularCategories />}
-
-      {/* Live System Announcements Broadcast */}
-      {token && <AnnouncementsFeed />}
+      {/* Prominent Search Bar for Logged-In Users */}
+      {token && (
+        <section className="py-5 sm:py-6 bg-white border-b border-slate-100">
+          <Container>
+            <SearchBar placeholder="Search restaurants, dishes, or cuisines..." showTags={false} variant="light" />
+          </Container>
+        </section>
+      )}
 
       {/* Main categories navigation grid */}
       <CategoriesSection />
@@ -1039,8 +1007,8 @@ const Home = ({ setShowLogin }) => {
           <Container>
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg sm:rounded-xl mb-2 sm:mb-3">
-                  <span className="text-[10px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Highlights</span>
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-50 border border-emerald-100 rounded-md sm:rounded-xl mb-1.5 sm:mb-3">
+                  <span className="text-[9px] sm:text-2xs font-bold text-emerald-700 uppercase tracking-wider">Highlights</span>
                 </div>
                 <h2 className="font-poppins text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                   Featured <span className="text-gradient-emerald">Promotions</span>
